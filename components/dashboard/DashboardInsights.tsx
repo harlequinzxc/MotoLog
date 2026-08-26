@@ -168,16 +168,16 @@ export function DashboardInsights({
     : null;
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-3">
       <section>
         <p className="mb-3 px-1 text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">COSTS</p>
-        <article className="rounded-2xl border border-border-default bg-bg-card p-5">
+        <article className="rounded-2xl border border-border-default bg-bg-card px-4 py-4">
           <div className="flex items-center gap-2 text-text-muted">
             <Wallet aria-hidden="true" size={17} />
             <p className="text-[10px] font-medium uppercase tracking-[0.08em]">SPENT THIS MONTH</p>
           </div>
           <div className="mt-3 flex flex-wrap items-baseline gap-3">
-            <p className="font-mono text-[32px] font-bold tracking-tight tabular-nums text-text-primary">
+            <p className="font-mono text-[32px] font-extrabold tracking-tight tabular-nums text-text-primary">
               {formatCurrency(currencySymbol, currentMonthSpend)}
             </p>
             {monthDifference !== null ? (
@@ -197,13 +197,13 @@ export function DashboardInsights({
         <div className="mt-4 grid grid-cols-2 gap-3">
           <article className="rounded-2xl border border-border-default bg-bg-card p-4">
             <div className="flex items-center gap-2 text-text-muted"><Route aria-hidden="true" size={16} /><p className="text-[10px] font-medium uppercase tracking-[0.06em]">COST / {units.distanceLabel}</p></div>
-            <p className="mt-3 font-mono text-[26px] font-bold tabular-nums text-text-primary">
+            <p className="mt-3 font-mono text-[24px] font-bold tabular-nums text-text-primary">
               {costPerDistance === null ? "—" : formatCurrency(currencySymbol, costPerDistance)}
             </p>
           </article>
           <article className="rounded-2xl border border-border-default bg-bg-card p-4">
             <div className="flex items-center gap-2 text-text-muted"><Droplet aria-hidden="true" size={16} /><p className="text-[10px] font-medium uppercase tracking-[0.06em]">FUEL PRICE</p></div>
-            <p className="mt-3 font-mono text-[26px] font-bold tabular-nums text-text-primary">
+            <p className="mt-3 font-mono text-[24px] font-bold tabular-nums text-text-primary">
               {averageFuelPrice === null ? "—" : formatCurrency(currencySymbol, averageFuelPrice)}
             </p>
             <p className="mt-1 text-[11px] text-text-muted">avg per {units.volumeLabel}</p>
@@ -213,7 +213,7 @@ export function DashboardInsights({
 
       <section>
         <p className="mb-3 px-1 text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">TRENDS</p>
-        <article className="rounded-2xl border border-border-default bg-bg-card p-5">
+        <article className="rounded-2xl border border-border-default bg-bg-card px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2"><Fuel aria-hidden="true" size={17} className="text-accent" /><h2 className="text-sm font-bold uppercase tracking-[0.05em] text-text-primary">ECONOMY TREND</h2></div>
             <span className="text-xs text-text-muted">{economyTrend.length} readings</span>
@@ -221,7 +221,7 @@ export function DashboardInsights({
 
           {economyTrend.length > 0 ? (
             <>
-              <div className="mt-5 h-[200px]" role="img" aria-label="Economy trend chart">
+              <div className="mt-4 h-[170px]" role="img" aria-label="Economy trend chart">
                 <ResponsiveContainer height="100%" width="100%">
                   <AreaChart data={economyTrend} margin={{ top: 12, right: 8, left: -20, bottom: 0 }}>
                     <defs>
@@ -249,18 +249,18 @@ export function DashboardInsights({
               <p className="mt-3 text-center text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">{units.economyLabel} PER FULL-TANK FILL</p>
             </>
           ) : (
-            <div className="mt-5 flex h-[200px] items-center justify-center rounded-2xl border border-dashed border-border-default bg-bg-elevated px-6 text-center text-sm leading-6 text-text-muted">Log a full tank to reveal your economy trend.</div>
+            <div className="mt-4 flex h-[170px] items-center justify-center rounded-2xl border border-dashed border-border-default bg-bg-elevated px-6 text-center text-sm leading-6 text-text-muted">Log a full tank to reveal your economy trend.</div>
           )}
         </article>
       </section>
 
       <section>
-        <article className="rounded-2xl border border-border-default bg-bg-card p-5">
+        <article className="rounded-2xl border border-border-default bg-bg-card px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2"><Wallet aria-hidden="true" size={17} className="text-accent" /><h2 className="text-sm font-bold uppercase tracking-[0.05em] text-text-primary">SPENDING</h2></div>
             <span className="text-xs text-text-muted">Past 6 months</span>
           </div>
-          <div className="mt-5 h-[200px]" role="img" aria-label="Monthly spending chart">
+          <div className="mt-4 h-[150px]" role="img" aria-label="Monthly spending chart">
             <ResponsiveContainer height="100%" width="100%">
               <BarChart data={spending} margin={{ top: 24, right: 4, left: 0, bottom: 0 }}>
                 <XAxis axisLine={false} dataKey="label" tick={{ fill: "#6B6B74", fontSize: 10 }} tickLine={false} />

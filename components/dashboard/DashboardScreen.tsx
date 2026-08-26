@@ -14,6 +14,7 @@ import { useMemo } from "react";
 import { DashboardInsights } from "@/components/dashboard/DashboardInsights";
 import { GarageScreen } from "@/components/garage/GarageScreen";
 import { useAppContext } from "@/context/AppContext";
+import { useTheme } from "@/lib/theme";
 import { calculateRangeBreakdown } from "@/lib/calculations";
 import { parseCalendarDate } from "@/lib/date";
 import {
@@ -95,6 +96,7 @@ export function DashboardScreen() {
     settings,
     vehicles,
   } = useAppContext();
+  const { accentTheme } = useTheme();
   const vehicleFillUps = useMemo(
     () => (activeVehicle ? getVehicleFillUps(activeVehicle.id) : []),
     [activeVehicle, getVehicleFillUps],
@@ -136,6 +138,8 @@ export function DashboardScreen() {
     : activeVehicle && activeVehicle.tankCapacity > 0
       ? (mainTankLitres / activeVehicle.tankCapacity) * 100
       : 0;
+  // Gold/amber accents need a reserve fallback so both bar segments stay visible.
+  const reserveColor = accentTheme === "gold" ? "#7C8CFF" : "#F5A524";
 
   if (!isHydrated || vehicles.length === 0 || !activeVehicle) {
     return <GarageScreen variant="dashboard" />;
@@ -209,35 +213,37 @@ export function DashboardScreen() {
         </span>
       </label>
 
-      <div className="mt-6 grid gap-6">
-        <article className="rounded-2xl border border-border-default bg-bg-card p-6 shadow-[0_0_40px_rgb(var(--color-accent)_/_0.06)]">
-          <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">RIDE</p>
+      <div className="mt-4 grid gap-3">
+        <article className="relative overflow-hidden rounded-2xl border border-border-default bg-bg-card px-4 py-4 shadow-[0_0_40px_rgb(var(--color-accent)_/_0.06)]">
+          <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_at_top,_rgb(var(--color-accent)_/_0.13)_0%,_transparent_68%)]" />
+          <div className="relative">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">RIDE</p>
 
-          <div className="mt-6 text-center">
+          <div className="mt-3 text-center">
             <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">
               AVERAGE ECONOMY
             </p>
-            <div className="mt-2 flex items-baseline justify-center gap-2">
-              <p className="font-mono text-[36px] font-bold leading-none tracking-[-0.07em] tabular-nums text-text-primary">
+            <div className="mt-1 flex items-baseline justify-center gap-2">
+              <p className="font-mono text-[52px] font-extrabold leading-none tracking-[-0.07em] tabular-nums text-white">
                 {displayAverageEconomy === null ? "—" : formatNumber(displayAverageEconomy)}
               </p>
               <span className="text-xl font-semibold text-accent">{units.economyLabel}</span>
             </div>
-            <p className="mt-3 text-[13px] text-text-secondary">
+            <p className="mt-1.5 text-[13px] text-text-secondary">
               <span className="font-semibold text-success">Best {bestEconomy === null ? "—" : formatEconomy(bestEconomy, units)}</span>
               <span className="mx-2 text-text-muted">•</span>
-              <span>Worst <span className="font-semibold text-accent">{worstEconomy === null ? "—" : formatEconomy(worstEconomy, units)}</span></span>
+              <span className="font-semibold text-reserve">Worst {worstEconomy === null ? "—" : formatEconomy(worstEconomy, units)}</span>
             </p>
           </div>
 
           {trend && economies.length >= 6 ? (
-            <div className="mt-5 flex gap-3 rounded-xl bg-bg-elevated p-3.5">
-              <span className={`grid size-8 shrink-0 place-items-center rounded-full ${trend.isImprovement ? "bg-success/15 text-success" : "bg-accent/15 text-accent"}`}>
+            <div className={`mt-4 flex gap-3 rounded-xl p-3.5 ${trend.isImprovement ? "bg-success/10" : "bg-danger/10"}`}>
+              <span className={`grid size-8 shrink-0 place-items-center rounded-full ${trend.isImprovement ? "bg-success/15 text-success" : "bg-danger/15 text-danger"}`}>
                 {trend.isImprovement ? <TrendingUp aria-hidden="true" size={16} /> : <TrendingDown aria-hidden="true" size={16} />}
               </span>
               <div>
                 <p className="text-sm leading-5 text-text-secondary">
-                  Your mileage has <span className={trend.isImprovement ? "font-bold text-success" : "font-bold text-accent"}>{trend.isImprovement ? "improved" : "declined"} {formatNumber(trend.percentage)}%</span> over the last 3 fill-ups.
+                  Your mileage has <span className={trend.isImprovement ? "font-bold text-success" : "font-bold text-danger"}>{trend.isImprovement ? "improved" : "declined"} {formatNumber(trend.percentage)}%</span> over the last 3 fill-ups.
                 </p>
                 <p className="mt-1 text-xs text-text-muted">
                   {formatEconomy(trend.recentAverage, units)} vs {formatEconomy(trend.previousAverage, units)}
@@ -245,9 +251,10 @@ export function DashboardScreen() {
               </div>
             </div>
           ) : null}
+          </div>
         </article>
 
-        <article className="rounded-2xl border border-border-default bg-bg-card p-5">
+        <article className="rounded-2xl border border-border-default bg-bg-card px-4 py-4">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">FULL TANK RANGE</p>
             <span className="rounded-lg border border-border-default px-2.5 py-1 font-mono text-xs font-semibold tabular-nums text-text-secondary">
@@ -266,16 +273,16 @@ export function DashboardScreen() {
 
           <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-bg-elevated shadow-inner">
             <span className="bg-accent" style={{ width: `${Math.max(mainRangePercentage, 0)}%` }} />
-            <span className="flex-1 bg-reserve" />
+            <span className="ml-0.5 flex-1" style={{ backgroundColor: reserveColor }} />
           </div>
           <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-bg-elevated p-3.5">
+            <div className="rounded-xl bg-bg-elevated p-3">
               <p className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.06em] text-text-secondary"><span className="size-2 rounded-full bg-accent" />Main tank</p>
               <p className="mt-2 font-mono text-[22px] font-bold tabular-nums text-text-primary">{displayedMainRange === null ? "—" : formatNumber(displayedMainRange, 0)}<span className="ml-1 text-[13px] font-medium text-text-muted">{units.distanceLabel}</span></p>
               <p className="mt-1 text-xs text-text-muted">{formatVolume(mainTankLitres, units)}</p>
             </div>
-            <div className="rounded-xl bg-bg-elevated p-3.5">
-              <p className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.06em] text-text-secondary"><span className="size-2 rounded-full bg-reserve" />Reserve tank</p>
+            <div className="rounded-xl bg-bg-elevated p-3">
+              <p className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.06em] text-text-secondary"><span className="size-2 rounded-full" style={{ backgroundColor: reserveColor }} />Reserve tank</p>
               <p className="mt-2 font-mono text-[22px] font-bold tabular-nums text-text-primary">{displayedReserveRange === null ? "—" : formatNumber(displayedReserveRange, 0)}<span className="ml-1 text-[13px] font-medium text-text-muted">{units.distanceLabel}</span></p>
               <p className="mt-1 text-xs text-text-muted">{formatVolume(activeVehicle.reserve, units)}</p>
             </div>
@@ -283,7 +290,7 @@ export function DashboardScreen() {
         </article>
 
         <section className="grid grid-cols-3 rounded-2xl border border-border-default bg-bg-card">
-          <article className="p-4">
+          <article className="px-3 py-3">
             <p className="font-mono text-xl font-bold tabular-nums text-text-primary">{averageFill === null ? "—" : formatVolume(averageFill, units)}</p>
             <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">AVG FILL</p>
           </article>
@@ -292,7 +299,7 @@ export function DashboardScreen() {
             <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">TOTAL FUEL</p>
             <p className="mt-1 text-[10px] text-text-muted">{vehicleFillUps.length} fills</p>
           </article>
-          <article className="p-4">
+          <article className="px-3 py-3">
             <p className="font-mono text-base font-bold tabular-nums text-text-primary">{lastFillUp ? formatDate(lastFillUp.date) : "—"}</p>
             <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">LAST FILL</p>
             <p className="mt-1 text-[10px] text-text-muted">{lastFillUp ? relativeDate(lastFillUp.date) : "No logs"}</p>
