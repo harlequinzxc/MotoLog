@@ -74,7 +74,6 @@ export function SettingsScreen() {
   const selectAccentTheme = (theme: AccentTheme) => {
     setAccentTheme(theme);
     updateSettings({ accentTheme: theme });
-    setNotice({ kind: "success", text: "Accent color updated." });
   };
 
   const selectCurrency = (currency: (typeof CURRENCIES)[number]) => {
@@ -82,7 +81,6 @@ export function SettingsScreen() {
       currency: currency.code,
       currencySymbol: currency.symbol,
     });
-    setNotice({ kind: "success", text: `Currency set to ${currency.code}.` });
   };
 
   const selectDistanceUnit = (imperial: boolean) => {

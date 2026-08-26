@@ -168,7 +168,29 @@ function toOptionalNumber(value: string) {
 }
 
 function toBoolean(value: string) {
-  return value.toLocaleLowerCase() === "true" || value === "1" || value.toLocaleLowerCase() === "yes";
+  const normalized = value.trim().toLocaleLowerCase();
+  return ["true", "1", "yes", "y"].includes(normalized);
+}
+
+/** Accept common spreadsheet-friendly ways of marking a brim-to-brim fill. */
+function toFullTank(value: string) {
+  const normalized = value.trim().toLocaleLowerCase();
+  return [
+    "true",
+    "1",
+    "yes",
+    "y",
+    "full",
+    "full fill",
+    "full tank",
+    "filled",
+    "filled to the brim",
+    "brim",
+    "brimmed",
+    "brim-to-brim",
+    "✓",
+    "x",
+  ].includes(normalized);
 }
 
 function isDistanceUnit(value: string): value is DistanceUnit {
@@ -322,7 +344,7 @@ function importSimpleData(rows: Row[]): AppData {
         odometer: Math.max(toKilometres(toNumber(row.odometer), units.distance), 0),
         fuelAdded: Math.max(toLitres(toNumber(row.fuel_added), units.volume), 0),
         totalCost: Math.max(toNumber(row.total_cost), 0),
-        isFullTank: toBoolean(row.full_tank),
+        isFullTank: toFullTank(row.full_tank),
         station: row.station,
         notes: row.notes,
         // Recalculated by AppContext after the replacement is applied.
@@ -390,7 +412,7 @@ function importLegacyData(rows: Row[]): AppData {
         odometer: Math.max(toNumber(row.odometer_km), 0),
         fuelAdded: Math.max(toNumber(row.fuel_added_l), 0),
         totalCost: Math.max(toNumber(row.total_cost), 0),
-        isFullTank: toBoolean(row.is_full_tank),
+        isFullTank: toFullTank(row.is_full_tank),
         station: row.station,
         notes: row.notes,
         distance: toOptionalNumber(row.distance_km),

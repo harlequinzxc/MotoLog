@@ -58,7 +58,9 @@ export function generateDemoData(referenceDate = new Date()): DemoData {
 
   const fillUps: FillUp[] = DISTANCES.map((distance, index) => {
     odometer += distance;
-    const isFullTank = index !== 4 && index !== 9;
+    // Demo logs represent normal brim-to-brim fuel stops; partial fills remain
+    // available in the log sheet but should not confuse first-time users.
+    const isFullTank = true;
     const fuelAdded = FUEL_ADDED[index];
     const fillDate = daysBefore(referenceDate, 342 - index * 28);
 
