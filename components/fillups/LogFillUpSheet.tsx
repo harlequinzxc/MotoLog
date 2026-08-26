@@ -13,9 +13,10 @@ import { useState, type FormEvent } from "react";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { useAppContext } from "@/context/AppContext";
 import { calculateFillUpMetrics } from "@/lib/calculations";
-import type { Vehicle } from "@/lib/types";
+import type { FillUp, Vehicle } from "@/lib/types";
 
 interface LogFillUpSheetProps {
+  fillUp?: FillUp;
   onClose: () => void;
   vehicle: Vehicle;
 }
@@ -74,28 +75,37 @@ function volumeFactor(vehicle: Vehicle) {
     : IMPERIAL_GALLON_IN_LITRES;
 }
 
-function createInitialForm(vehicle: Vehicle): FillUpFormState {
+function createInitialForm(vehicle: Vehicle, fillUp?: FillUp): FillUpFormState {
   const isImperial = isImperialVehicle(vehicle);
+  const sourceOdometer = fillUp?.odometer ?? vehicle.currentOdometer;
+  const sourceFuelAdded = fillUp?.fuelAdded ?? 0;
   const odometer = isImperial
-    ? vehicle.currentOdometer / MILE_IN_KILOMETRES
-    : vehicle.currentOdometer;
+    ? sourceOdometer / MILE_IN_KILOMETRES
+    : sourceOdometer;
+  const fuelAdded = isImperial
+    ? sourceFuelAdded / volumeFactor(vehicle)
+    : sourceFuelAdded;
 
   return {
-    date: today(),
+    date: fillUp?.date ?? today(),
     odometer: formatInputNumber(odometer),
-    fuelAdded: "",
-    totalCost: "",
-    isFullTank: true,
-    station: "",
-    notes: "",
+    fuelAdded: fillUp ? formatInputNumber(fuelAdded) : "",
+    totalCost: fillUp ? formatInputNumber(fillUp.totalCost) : "",
+    isFullTank: fillUp?.isFullTank ?? true,
+    station: fillUp?.station ?? "",
+    notes: fillUp?.notes ?? "",
   };
 }
 
 /** Log a new fill-up and preserve correct partial-fill economy calculations. */
-export function LogFillUpSheet({ onClose, vehicle }: LogFillUpSheetProps) {
-  const { addFillUp, getVehicleFillUps, settings } = useAppContext();
+export function LogFillUpSheet({
+  fillUp,
+  onClose,
+  vehicle,
+}: LogFillUpSheetProps) {
+  const { addFillUp, getVehicleFillUps, settings, updateFillUp } = useAppContext();
   const [form, setForm] = useState<FillUpFormState>(() =>
-    createInitialForm(vehicle),
+    createInitialForm(vehicle, fillUp),
   );
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -105,6 +115,10 @@ export function LogFillUpSheet({ onClose, vehicle }: LogFillUpSheetProps) {
     : vehicle.currentOdometer;
   const distanceUnit = isImperial ? "mi" : "km";
   const volumeUnit = isImperial ? "gal" : "L";
+  const minimumOdometer = fillUp ? vehicle.startingOdometer : vehicle.currentOdometer;
+  const minimumDisplayOdometer = isImperial
+    ? minimumOdometer / MILE_IN_KILOMETRES
+    : minimumOdometer;
   const odometerInput = numberOrNaN(form.odometer);
   const odometerDelta = Number.isFinite(odometerInput)
     ? odometerInput - currentOdometer
@@ -135,8 +149,8 @@ export function LogFillUpSheet({ onClose, vehicle }: LogFillUpSheetProps) {
       : displayFuelAdded;
     const nextErrors: FormErrors = {};
 
-    if (!Number.isFinite(displayOdometer) || odometer < vehicle.currentOdometer) {
-      nextErrors.odometer = `Enter at least ${formatNumber(currentOdometer)} ${distanceUnit}.`;
+    if (!Number.isFinite(displayOdometer) || odometer < minimumOdometer) {
+      nextErrors.odometer = `Enter at least ${formatNumber(minimumDisplayOdometer)} ${distanceUnit}.`;
     }
 
     if (!Number.isFinite(displayFuelAdded) || displayFuelAdded <= 0) {
@@ -153,15 +167,15 @@ export function LogFillUpSheet({ onClose, vehicle }: LogFillUpSheetProps) {
     }
 
     const metrics = calculateFillUpMetrics({
-      existingFillUps: getVehicleFillUps(vehicle.id),
+      existingFillUps: getVehicleFillUps(vehicle.id).filter(
+        (existingFillUp) => existingFillUp.id !== fillUp?.id,
+      ),
       fuelAdded,
       isFullTank: form.isFullTank,
       odometer,
       vehicle,
     });
-
-    addFillUp({
-      vehicleId: vehicle.id,
+    const fillUpValues = {
       date: form.date,
       odometer,
       fuelAdded,
@@ -171,12 +185,23 @@ export function LogFillUpSheet({ onClose, vehicle }: LogFillUpSheetProps) {
       notes: form.notes,
       distance: metrics.distance,
       economy: metrics.economy,
-    });
+    };
+
+    if (fillUp) {
+      updateFillUp(fillUp.id, fillUpValues);
+    } else {
+      addFillUp({ vehicleId: vehicle.id, ...fillUpValues });
+    }
+
     onClose();
   };
 
   return (
-    <BottomSheet isOpen onClose={onClose} title="Log a fill-up">
+    <BottomSheet
+      isOpen
+      onClose={onClose}
+      title={fillUp ? "Edit fill-up" : "Log a fill-up"}
+    >
       <form className="pb-2" noValidate onSubmit={handleSubmit}>
         <div className="mb-6 rounded-2xl border border-accent/15 bg-accent/5 px-4 py-3">
           <p className="text-[10px] font-bold tracking-[0.14em] text-accent">
@@ -239,8 +264,15 @@ export function LogFillUpSheet({ onClose, vehicle }: LogFillUpSheetProps) {
                 Enter the current reading to calculate distance.
               </span>
             ) : odometerDelta < 0 ? (
-              <span className="text-xs font-medium text-red-400" id="odometer-delta">
-                {formatNumber(Math.abs(odometerDelta))} {distanceUnit} below the current reading.
+              <span
+                className={`text-xs ${
+                  fillUp ? "text-text-secondary" : "font-medium text-red-400"
+                }`}
+                id="odometer-delta"
+              >
+                {fillUp
+                  ? `${formatNumber(Math.abs(odometerDelta))} ${distanceUnit} before the current reading.`
+                  : `${formatNumber(Math.abs(odometerDelta))} ${distanceUnit} below the current reading.`}
               </span>
             ) : odometerDelta === 0 ? (
               <span className="text-xs text-text-muted" id="odometer-delta">
@@ -399,7 +431,7 @@ export function LogFillUpSheet({ onClose, vehicle }: LogFillUpSheetProps) {
             className="h-[3.25rem] w-full rounded-2xl bg-accent px-4 text-sm font-bold text-text-primary shadow-accent-glow transition-transform hover:brightness-110 active:scale-[0.98]"
             type="submit"
           >
-            Save fill-up
+            {fillUp ? "Save changes" : "Save fill-up"}
           </button>
         </div>
       </form>
