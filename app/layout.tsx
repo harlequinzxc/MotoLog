@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
+import { AppProvider } from "@/context/AppContext";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
@@ -51,14 +52,16 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="MotoLog" />
       </head>
       <body>
-        <ThemeProvider>
-          <ServiceWorkerRegistration />
-          <div className="min-h-[100dvh] pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
-            {children}
-          </div>
-          <BottomNav />
-          <InstallPrompt />
-        </ThemeProvider>
+        <AppProvider>
+          <ThemeProvider>
+            <ServiceWorkerRegistration />
+            <div className="min-h-[100dvh] pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
+              {children}
+            </div>
+            <BottomNav />
+            <InstallPrompt />
+          </ThemeProvider>
+        </AppProvider>
       </body>
     </html>
   );
