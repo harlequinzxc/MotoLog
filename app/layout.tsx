@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
+import { BottomNav } from "@/components/navigation/BottomNav";
 import { ThemeProvider } from "@/lib/theme";
 
 import "./globals.css";
@@ -48,7 +49,12 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="MotoLog" />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <div className="min-h-[100dvh] pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
+            {children}
+          </div>
+          <BottomNav />
+        </ThemeProvider>
       </body>
     </html>
   );
