@@ -1,4 +1,3 @@
-import { generateDemoData } from "@/lib/demoData";
 import { createId } from "@/lib/ids";
 import {
   fromKilometres,
@@ -261,16 +260,6 @@ export function exportAppDataToCsv(data: AppData) {
       rowToCsv(row, SIMPLE_HEADERS),
     ),
   ].join("\r\n");
-}
-
-/** Builds a simple Yamaha MT-15 CSV template ready for spreadsheet editing. */
-export function exportDemoDataToCsv(settings: AppSettings) {
-  const demo = generateDemoData();
-  return exportAppDataToCsv({
-    settings,
-    vehicles: [demo.vehicle],
-    fillUps: demo.fillUps,
-  });
 }
 
 function importSimpleData(rows: Row[]): AppData {

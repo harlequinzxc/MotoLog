@@ -7,7 +7,6 @@ import {
   Palette,
   ReceiptText,
   SlidersHorizontal,
-  Sparkles,
 } from "lucide-react";
 import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
 
@@ -15,11 +14,7 @@ import { MotoMark } from "@/components/branding/MotoMark";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAppContext } from "@/context/AppContext";
 import { APP_NAME, APP_VERSION } from "@/lib/constants";
-import {
-  exportAppDataToCsv,
-  exportDemoDataToCsv,
-  importAppDataFromCsv,
-} from "@/lib/csv";
+import { exportAppDataToCsv, importAppDataFromCsv } from "@/lib/csv";
 import { type AccentTheme, useTheme } from "@/lib/theme";
 import type { ConsumptionUnit } from "@/lib/types";
 
@@ -139,17 +134,6 @@ export function SettingsScreen() {
       `motolog-backup-${new Date().toISOString().slice(0, 10)}.csv`,
     );
     setNotice({ kind: "success", text: "CSV backup downloaded." });
-  };
-
-  const exportDemoTemplate = () => {
-    downloadCsv(
-      exportDemoDataToCsv({ ...settings, accentTheme }),
-      "motolog-demo-template.csv",
-    );
-    setNotice({
-      kind: "success",
-      text: "Demo CSV downloaded. Edit it in a spreadsheet, then import it here.",
-    });
   };
 
   const importBackup = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -383,7 +367,7 @@ export function SettingsScreen() {
 
         <SettingsSection title="BACKUP & RESTORE">
           <p className="text-sm leading-6 text-text-secondary">
-            CSVs use simple settings, vehicle, and fill-up rows — no internal IDs or timestamps. Edit a template in any spreadsheet, then import it to replace this device.
+            Export uses simple settings, vehicle, and fill-up rows — no internal IDs or timestamps. Load demo data in Garage first if you want a ready-made spreadsheet to edit, then export it here.
           </p>
           <div className="mt-5 grid grid-cols-2 gap-3">
             <button
@@ -401,14 +385,6 @@ export function SettingsScreen() {
             >
               <FileUp aria-hidden="true" size={17} className="text-accent" />
               Import CSV
-            </button>
-            <button
-              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-2xl border border-accent/25 bg-accent/10 px-3 text-sm font-bold text-text-primary transition-colors hover:bg-accent/15"
-              onClick={exportDemoTemplate}
-              type="button"
-            >
-              <Sparkles aria-hidden="true" size={17} className="text-accent" />
-              Download demo CSV template
             </button>
             <input
               accept=".csv,text/csv"

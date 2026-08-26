@@ -33,10 +33,9 @@ worker and meets Chrome's manifest requirements. When Chrome emits its
 installation event, the app shows an **Install MotoLog** prompt; tapping it opens
 Chrome's native installation dialog.
 
-## CSV templates
+## CSV backups
 
-The Settings screen can download a **demo CSV template** containing a Yamaha
-MT-15 and sample fill-ups. It uses a simple settings row followed by vehicle and
-fill-up rows, with no internal IDs or timestamps. Edit the settings row first;
-its currency and unit fields determine how vehicle and fill-up values are read
-when the CSV is imported.
+CSV exports use a simple settings row followed by vehicle and fill-up rows, with
+no internal IDs or timestamps. To start from sample data, load demo data in the
+Garage, then export it from Settings. Edit the settings row first; its currency
+and unit fields determine how vehicle and fill-up values are read on import.
