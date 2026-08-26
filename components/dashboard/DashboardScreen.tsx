@@ -184,7 +184,7 @@ export function DashboardScreen() {
 
       <div className="relative z-40 mt-6">
         <div className="flex items-center gap-3 rounded-2xl border border-border-default bg-bg-card p-4 shadow-[0_10px_30px_rgb(0_0_0_/_0.12)]">
-          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-bg-elevated text-text-secondary">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
             <VehicleIcon aria-hidden="true" size={20} />
           </span>
           {vehicles.length > 1 ? (
@@ -250,12 +250,11 @@ export function DashboardScreen() {
       </div>
 
       <div className="mt-4 grid gap-3">
+        <p className="px-1 text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">RIDE</p>
         <article className="relative overflow-hidden rounded-2xl border border-border-default bg-bg-card px-4 py-4 shadow-[0_0_40px_rgb(var(--color-accent)_/_0.06)]">
           <span aria-hidden="true" className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[radial-gradient(ellipse_at_top,_rgb(var(--color-accent)_/_0.13)_0%,_transparent_68%)]" />
           <div className="relative">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">RIDE</p>
-
-          <div className="mt-3 text-center">
+          <div className="text-center">
             <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">
               AVERAGE ECONOMY
             </p>
@@ -266,9 +265,9 @@ export function DashboardScreen() {
               <span className="text-xl font-semibold text-accent">{units.economyLabel}</span>
             </div>
             <p className="mt-1.5 text-[13px] text-text-secondary">
-              <span className="font-semibold text-success">Best {bestEconomy === null ? "—" : formatEconomy(bestEconomy, units)}</span>
+              <span className="font-semibold text-[#22C55E]">Best {bestEconomy === null ? "—" : formatEconomy(bestEconomy, units)}</span>
               <span className="mx-2 text-text-muted">•</span>
-              <span className="font-semibold text-reserve">Worst {worstEconomy === null ? "—" : formatEconomy(worstEconomy, units)}</span>
+              <span className="font-semibold text-[#F59E0B]">Worst {worstEconomy === null ? "—" : formatEconomy(worstEconomy, units)}</span>
             </p>
           </div>
 
@@ -322,10 +321,7 @@ export function DashboardScreen() {
               </div>
             </div>
           </div>
-          </div>
-        </article>
-
-        <section className="grid grid-cols-3 rounded-2xl border border-border-default bg-bg-card">
+          <section className="mt-4 grid grid-cols-3 rounded-2xl border border-border-default bg-bg-elevated">
           <article className="px-3 py-3">
             <p className="font-mono text-xl font-bold tabular-nums text-text-primary">{averageFill === null ? "—" : formatVolume(averageFill, units)}</p>
             <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">AVG FILL</p>
@@ -340,7 +336,11 @@ export function DashboardScreen() {
             <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">LAST FILL</p>
             <p className="mt-1 text-[10px] text-text-muted">{lastFillUp ? relativeDate(lastFillUp.date) : "No logs"}</p>
           </article>
-        </section>
+          </section>
+          </div>
+        </article>
+
+
 
         <DashboardInsights
           currencySymbol={settings.currencySymbol}
