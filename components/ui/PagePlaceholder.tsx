@@ -32,7 +32,7 @@ export function PagePlaceholder({
       </header>
 
       <div className="flex flex-1 flex-col items-center justify-center pb-12 text-center">
-        <span className="grid size-16 place-items-center rounded-3xl border border-accent/20 bg-accent/10 text-accent shadow-accent">
+        <span className="grid size-16 place-items-center rounded-3xl border border-accent/20 bg-accent/10 text-accent shadow-accent-glow">
           <Icon aria-hidden="true" size={30} strokeWidth={2} />
         </span>
         <p className="mt-7 text-xs font-bold tracking-[0.18em] text-accent">

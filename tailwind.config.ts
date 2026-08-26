@@ -20,7 +20,7 @@ const config: Config = {
         "border-default": "#2A2A30",
       },
       boxShadow: {
-        accent: "0 12px 32px rgb(var(--color-accent) / 0.24)",
+        "accent-glow": "0 12px 32px rgb(var(--color-accent) / 0.24)",
       },
     },
   },

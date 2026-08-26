@@ -59,7 +59,7 @@ export function BottomSheet({
           </h2>
           <button
             aria-label={`Close ${title}`}
-            className="mt-2 grid size-10 place-items-center rounded-xl text-text-muted transition-colors hover:bg-bg-input hover:text-text-primary"
+            className="mt-2 grid size-10 place-items-center rounded-full bg-bg-input text-text-muted transition-colors hover:bg-border-default hover:text-text-primary"
             onClick={onClose}
             type="button"
           >
