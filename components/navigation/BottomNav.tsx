@@ -34,9 +34,9 @@ function NavLink({ href, icon: Icon, label, pathname }: NavLinkProps) {
   return (
     <Link
       aria-current={active ? "page" : undefined}
-      className={`relative flex h-[4.5rem] flex-col items-center justify-center gap-1 border-t-2 px-1 text-[10px] font-semibold uppercase tracking-[0.06em] transition-all duration-150 ${
+      className={`relative flex h-[4.5rem] flex-col items-center justify-center gap-1 border-t-2 px-1 text-[10px] font-medium tracking-[0.02em] transition-all duration-150 ${
         active
-          ? "border-text-primary text-text-primary"
+          ? "border-accent text-accent"
           : "border-transparent text-text-muted hover:text-text-secondary"
       }`}
       href={href}
@@ -99,7 +99,7 @@ export function BottomNav() {
             >
               <Fuel aria-hidden="true" size={24} strokeWidth={2.4} />
             </button>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-accent">
+            <span className="text-[10px] font-medium tracking-[0.02em] text-accent">
               Log Fill
             </span>
           </div>

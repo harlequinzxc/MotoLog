@@ -77,7 +77,7 @@ function sixMonthSpending(fillUps: FillUp[]): MonthlySpend[] {
       key,
       spend,
       isCurrent: key === currentMonthKey,
-      label: new Intl.DateTimeFormat(undefined, { month: "short" }).format(monthDate),
+      label: new Intl.DateTimeFormat(undefined, { month: "short" }).format(monthDate).toUpperCase(),
     };
   });
 }
@@ -147,6 +147,7 @@ export function DashboardInsights({
       (first, second) =>
         first.date.localeCompare(second.date) || first.odometer - second.odometer,
     )
+    .slice(-12)
     .map((fillUp) => ({
       date: new Intl.DateTimeFormat(undefined, {
         day: "numeric",

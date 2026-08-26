@@ -1,9 +1,7 @@
 "use client";
 
 import {
-  BarChart3,
   Bike,
-  CalendarDays,
   CarFront,
   ChevronDown,
   Fuel,
@@ -193,7 +191,7 @@ export function DashboardScreen() {
         </span>
         <span className="relative shrink-0 rounded-xl border border-border-default px-3 py-2 text-right">
           <span className="block text-[9px] font-medium uppercase tracking-[0.08em] text-text-muted">ODO</span>
-          <span className="mt-0.5 block font-mono text-sm font-bold tabular-nums text-accent">
+          <span className="mt-0.5 block font-mono text-sm font-bold tabular-nums text-text-primary">
             {formatDistance(activeVehicle.currentOdometer, units)}
           </span>
           <select
@@ -213,28 +211,14 @@ export function DashboardScreen() {
 
       <div className="mt-6 grid gap-6">
         <article className="rounded-2xl border border-border-default bg-bg-card p-6 shadow-[0_0_40px_rgb(var(--color-accent)_/_0.06)]">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">RIDE</p>
-            {trend ? (
-              <span
-                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
-                  trend.isImprovement
-                    ? "bg-success/15 text-success"
-                    : "bg-accent/15 text-accent"
-                }`}
-              >
-                {trend.isImprovement ? <TrendingUp aria-hidden="true" size={13} /> : <TrendingDown aria-hidden="true" size={13} />}
-                {trend.isImprovement ? "improved" : "declined"} {formatNumber(trend.percentage)}%
-              </span>
-            ) : null}
-          </div>
+          <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">RIDE</p>
 
           <div className="mt-6 text-center">
             <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">
               AVERAGE ECONOMY
             </p>
             <div className="mt-2 flex items-baseline justify-center gap-2">
-              <p className="font-mono text-[56px] font-bold leading-none tracking-[-0.07em] tabular-nums text-text-primary">
+              <p className="font-mono text-[36px] font-bold leading-none tracking-[-0.07em] tabular-nums text-text-primary">
                 {displayAverageEconomy === null ? "—" : formatNumber(displayAverageEconomy)}
               </p>
               <span className="text-xl font-semibold text-accent">{units.economyLabel}</span>
@@ -298,26 +282,21 @@ export function DashboardScreen() {
           </div>
         </article>
 
-        <section>
-          <div className="grid grid-cols-3 gap-3">
-            <article className="rounded-2xl bg-bg-card p-4">
-              <Fuel aria-hidden="true" size={16} className="text-text-muted" />
-              <p className="mt-4 font-mono text-xl font-bold tabular-nums text-text-primary">{averageFill === null ? "—" : formatVolume(averageFill, units)}</p>
-              <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">AVG FILL</p>
-            </article>
-            <article className="rounded-2xl bg-bg-card p-4">
-              <BarChart3 aria-hidden="true" size={16} className="text-text-muted" />
-              <p className="mt-4 font-mono text-xl font-bold tabular-nums text-text-primary">{vehicleFillUps.length === 0 ? "—" : formatVolume(totalFuel, units)}</p>
-              <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">TOTAL FUEL</p>
-              <p className="mt-1 text-[11px] text-text-muted">{vehicleFillUps.length} fills</p>
-            </article>
-            <article className="rounded-2xl bg-bg-card p-4">
-              <CalendarDays aria-hidden="true" size={16} className="text-text-muted" />
-              <p className="mt-4 text-sm font-bold text-text-primary">{lastFillUp ? formatDate(lastFillUp.date) : "—"}</p>
-              <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">LAST FILL</p>
-              <p className="mt-1 text-[11px] text-text-muted">{lastFillUp ? relativeDate(lastFillUp.date) : "No logs"}</p>
-            </article>
-          </div>
+        <section className="grid grid-cols-3 rounded-2xl border border-border-default bg-bg-card">
+          <article className="p-4">
+            <p className="font-mono text-xl font-bold tabular-nums text-text-primary">{averageFill === null ? "—" : formatVolume(averageFill, units)}</p>
+            <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">AVG FILL</p>
+          </article>
+          <article className="border-x border-border-default p-4">
+            <p className="font-mono text-xl font-bold tabular-nums text-text-primary">{vehicleFillUps.length === 0 ? "—" : formatVolume(totalFuel, units)}</p>
+            <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">TOTAL FUEL</p>
+            <p className="mt-1 text-[10px] text-text-muted">{vehicleFillUps.length} fills</p>
+          </article>
+          <article className="p-4">
+            <p className="font-mono text-base font-bold tabular-nums text-text-primary">{lastFillUp ? formatDate(lastFillUp.date) : "—"}</p>
+            <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">LAST FILL</p>
+            <p className="mt-1 text-[10px] text-text-muted">{lastFillUp ? relativeDate(lastFillUp.date) : "No logs"}</p>
+          </article>
         </section>
 
         <DashboardInsights
