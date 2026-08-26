@@ -37,7 +37,9 @@ const CURRENT_YEAR = new Date().getFullYear();
 const IMPERIAL_GALLON_IN_LITRES = 4.546_09;
 const MILE_IN_KILOMETRES = 1.609_344;
 
-function createEmptyForm(): VehicleFormState {
+function createEmptyForm(
+  unitPreference: UnitPreferenceChoice = "metric",
+): VehicleFormState {
   return {
     type: "motorcycle",
     name: "",
@@ -45,7 +47,7 @@ function createEmptyForm(): VehicleFormState {
     tankCapacity: "",
     reserve: "",
     startingOdometer: "",
-    unitPreference: "metric",
+    unitPreference,
   };
 }
 
@@ -98,6 +100,7 @@ export function GarageScreen() {
     isHydrated,
     loadDemoData,
     setActiveVehicle,
+    settings,
     updateVehicle,
     vehicles,
   } = useAppContext();
@@ -132,7 +135,7 @@ export function GarageScreen() {
       });
       setEditingVehicleId(vehicle.id);
     } else {
-      setForm(createEmptyForm());
+      setForm(createEmptyForm(settings.distanceUnit === "mi" ? "imperial" : "metric"));
       setEditingVehicleId(null);
     }
 
@@ -331,6 +334,7 @@ export function GarageScreen() {
                   onDelete={() => setVehiclePendingDelete(vehicle)}
                   onEdit={() => openVehicleSheet(vehicle)}
                   onSetActive={() => setActiveVehicle(vehicle.id)}
+                  settings={settings}
                   vehicle={vehicle}
                 />
               ))}

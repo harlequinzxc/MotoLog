@@ -1,11 +1,21 @@
 import { ChevronDown, Fuel, Gauge, MapPin, Pencil, Trash2 } from "lucide-react";
 import type { KeyboardEvent } from "react";
 
-import type { FillUp } from "@/lib/types";
+import {
+  formatDistance,
+  formatEconomy,
+  formatVolume,
+  fromLitres,
+  resolveUnits,
+  type ResolvedUnits,
+} from "@/lib/units";
+import type { AppSettings, FillUp, Vehicle } from "@/lib/types";
 
 interface FillUpCardProps {
   currencySymbol: string;
   fillUp: FillUp;
+  settings: AppSettings;
+  vehicle?: Vehicle;
   isExpanded: boolean;
   onDelete: () => void;
   onEdit: () => void;
@@ -32,7 +42,13 @@ function formatDate(date: string) {
   }).format(new Date(`${date}T12:00:00`));
 }
 
-function EconomyMeter({ economy }: { economy: number | null }) {
+function EconomyMeter({
+  economy,
+  units,
+}: {
+  economy: number | null;
+  units: ResolvedUnits;
+}) {
   if (economy === null) {
     return (
       <div className="mt-4 rounded-xl border border-border-default bg-bg-input px-3 py-2 text-xs font-medium text-text-muted">
@@ -47,7 +63,7 @@ function EconomyMeter({ economy }: { economy: number | null }) {
     <div className="mt-4">
       <div className="flex items-center justify-between text-[10px] font-bold tracking-[0.1em] text-text-muted">
         <span>ECONOMY</span>
-        <span className="text-text-primary">{formatNumber(economy)} km/L</span>
+        <span className="text-text-primary">{formatEconomy(economy, units)}</span>
       </div>
       <div className="relative mt-2 h-2 rounded-full bg-gradient-to-r from-red-500 via-amber-400 to-emerald-400">
         <span
@@ -67,10 +83,15 @@ export function FillUpCard({
   onDelete,
   onEdit,
   onToggle,
+  settings,
+  vehicle,
   vehicleName,
 }: FillUpCardProps) {
-  const pricePerLitre =
-    fillUp.fuelAdded > 0 ? fillUp.totalCost / fillUp.fuelAdded : null;
+  const units = resolveUnits(settings, vehicle);
+  const pricePerVolume =
+    fillUp.fuelAdded > 0
+      ? fillUp.totalCost / fromLitres(fillUp.fuelAdded, units.volume)
+      : null;
   const station = fillUp.station || "Fuel stop";
 
   const handleKeyDown = (event: KeyboardEvent<HTMLElement>) => {
@@ -111,7 +132,7 @@ export function FillUpCard({
           ) : null}
         </div>
         <div className="flex shrink-0 items-center gap-2">
-          <p className="text-right text-base font-bold tabular-nums text-text-primary">
+          <p className="text-right text-base font-bold font-mono tabular-nums text-text-primary">
             {currencySymbol}{formatNumber(fillUp.totalCost, 2, 2)}
           </p>
           <ChevronDown
@@ -127,27 +148,29 @@ export function FillUpCard({
       <div className="mt-4 grid grid-cols-3 gap-2 rounded-2xl border border-border-default bg-bg-input p-3">
         <div>
           <p className="text-[9px] font-bold tracking-[0.12em] text-text-muted">DIST</p>
-          <p className="mt-1 text-xs font-bold tabular-nums text-text-primary">
-            {fillUp.distance === null ? "—" : `${formatNumber(fillUp.distance)} km`}
+          <p className="mt-1 text-xs font-bold font-mono tabular-nums text-text-primary">
+            {fillUp.distance === null ? "—" : formatDistance(fillUp.distance, units)}
           </p>
         </div>
         <div>
           <p className="text-[9px] font-bold tracking-[0.12em] text-text-muted">FUEL</p>
-          <p className="mt-1 text-xs font-bold tabular-nums text-text-primary">
-            {formatNumber(fillUp.fuelAdded)} L
+          <p className="mt-1 text-xs font-bold font-mono tabular-nums text-text-primary">
+            {formatVolume(fillUp.fuelAdded, units)}
           </p>
         </div>
         <div>
-          <p className="text-[9px] font-bold tracking-[0.12em] text-text-muted">PRICE/L</p>
-          <p className="mt-1 text-xs font-bold tabular-nums text-text-primary">
-            {pricePerLitre === null
+          <p className="text-[9px] font-bold tracking-[0.12em] text-text-muted">
+            PRICE/{units.volumeLabel}
+          </p>
+          <p className="mt-1 text-xs font-bold font-mono tabular-nums text-text-primary">
+            {pricePerVolume === null
               ? "—"
-              : `${currencySymbol}${formatNumber(pricePerLitre, 2, 2)}`}
+              : `${currencySymbol}${formatNumber(pricePerVolume, 2, 2)}`}
           </p>
         </div>
       </div>
 
-        <EconomyMeter economy={fillUp.economy} />
+        <EconomyMeter economy={fillUp.economy} units={units} />
       </div>
 
       {isExpanded ? (
@@ -155,9 +178,9 @@ export function FillUpCard({
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div className="rounded-2xl bg-bg-input p-3">
               <p className="text-[9px] font-bold tracking-[0.12em] text-text-muted">ODOMETER</p>
-              <p className="mt-1 flex items-center gap-1.5 font-bold tabular-nums text-text-primary">
+              <p className="mt-1 flex items-center gap-1.5 font-bold font-mono tabular-nums text-text-primary">
                 <Gauge aria-hidden="true" size={14} className="text-accent" />
-                {formatNumber(fillUp.odometer, 0)} km
+                {formatDistance(fillUp.odometer, units)}
               </p>
             </div>
             <div className="rounded-2xl bg-bg-input p-3">

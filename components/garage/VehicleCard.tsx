@@ -1,19 +1,15 @@
 import { Bike, CarFront, Clock3, Pencil, Trash2 } from "lucide-react";
 
-import type { FillUp, Vehicle } from "@/lib/types";
+import { formatDistance, formatVolume, resolveUnits } from "@/lib/units";
+import type { AppSettings, FillUp, Vehicle } from "@/lib/types";
 
 interface VehicleCardProps {
   fillUps: FillUp[];
+  settings: AppSettings;
   onDelete: () => void;
   onEdit: () => void;
   onSetActive: () => void;
   vehicle: Vehicle;
-}
-
-function formatNumber(value: number, maximumFractionDigits = 0) {
-  return new Intl.NumberFormat(undefined, {
-    maximumFractionDigits,
-  }).format(value);
 }
 
 function lastLoggedLabel(fillUps: FillUp[]) {
@@ -45,11 +41,13 @@ export function VehicleCard({
   onDelete,
   onEdit,
   onSetActive,
+  settings,
   vehicle,
 }: VehicleCardProps) {
   const Icon = vehicle.type === "motorcycle" ? Bike : CarFront;
   const typeLabel = vehicle.type === "motorcycle" ? "Motorcycle" : "Car";
-  const tankValue = `${formatNumber(vehicle.tankCapacity, 1)} L`;
+  const units = resolveUnits(settings, vehicle);
+  const tankValue = formatVolume(vehicle.tankCapacity, units);
 
   return (
     <article className="rounded-3xl border border-border-default bg-bg-card p-4 shadow-[0_16px_40px_rgb(0_0_0_/_0.16)]">
@@ -86,15 +84,15 @@ export function VehicleCard({
           <dt className="text-[9px] font-bold tracking-[0.12em] text-text-muted">
             ODOMETER
           </dt>
-          <dd className="mt-1 truncate text-sm font-bold tabular-nums text-text-primary">
-            {formatNumber(vehicle.currentOdometer)} km
+          <dd className="mt-1 truncate text-sm font-bold font-mono tabular-nums text-text-primary">
+            {formatDistance(vehicle.currentOdometer, units)}
           </dd>
         </div>
         <div className="border-r border-border-default px-3 py-3">
           <dt className="text-[9px] font-bold tracking-[0.12em] text-text-muted">
             TANK
           </dt>
-          <dd className="mt-1 truncate text-sm font-bold tabular-nums text-text-primary">
+          <dd className="mt-1 truncate text-sm font-bold font-mono tabular-nums text-text-primary">
             {tankValue}
           </dd>
         </div>
@@ -102,7 +100,7 @@ export function VehicleCard({
           <dt className="text-[9px] font-bold tracking-[0.12em] text-text-muted">
             FILL-UPS
           </dt>
-          <dd className="mt-1 text-sm font-bold tabular-nums text-text-primary">
+          <dd className="mt-1 text-sm font-bold font-mono tabular-nums text-text-primary">
             {fillUps.length}
           </dd>
         </div>

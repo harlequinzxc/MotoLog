@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { recalculateVehicleFillUps } from "@/lib/calculations";
 import { generateDemoData, type DemoData } from "@/lib/demoData";
 import { createId } from "@/lib/ids";
 import {
@@ -71,7 +72,7 @@ function chooseOneActive(vehicles: Vehicle[], preferredId?: string) {
 function syncCurrentOdometers(
   vehicles: Vehicle[],
   fillUps: FillUp[],
-  updatedAt: string,
+  updatedAt?: string,
 ) {
   return vehicles.map((vehicle) => {
     const latestOdometer = fillUps.reduce((highestOdometer, fillUp) => {
@@ -84,18 +85,44 @@ function syncCurrentOdometers(
 
     return vehicle.currentOdometer === latestOdometer
       ? vehicle
-      : { ...vehicle, currentOdometer: latestOdometer, updatedAt };
+      : {
+          ...vehicle,
+          currentOdometer: latestOdometer,
+          updatedAt: updatedAt ?? vehicle.updatedAt,
+        };
   });
+}
+
+function recalculateAllFillUps(vehicles: Vehicle[], fillUps: FillUp[]) {
+  return vehicles.reduce(
+    (currentFillUps, vehicle) =>
+      recalculateVehicleFillUps(vehicle, currentFillUps),
+    fillUps,
+  );
+}
+
+function recalculateOneVehicleFillUps(
+  vehicles: Vehicle[],
+  fillUps: FillUp[],
+  vehicleId: string,
+) {
+  const vehicle = vehicles.find((candidate) => candidate.id === vehicleId);
+  return vehicle ? recalculateVehicleFillUps(vehicle, fillUps) : fillUps;
 }
 
 function appReducer(state: AppState, action: AppAction): AppState {
   switch (action.type) {
-    case "hydrate":
+    case "hydrate": {
+      const vehicles = chooseOneActive(action.data.vehicles);
+      const fillUps = recalculateAllFillUps(vehicles, action.data.fillUps);
+
       return {
         ...action.data,
-        vehicles: chooseOneActive(action.data.vehicles),
+        vehicles: syncCurrentOdometers(vehicles, fillUps),
+        fillUps,
         isHydrated: true,
       };
+    }
 
     case "addVehicle": {
       const shouldBeActive =
@@ -132,11 +159,18 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ? chooseOneActive(vehicles, action.id)
         : vehicles;
 
+      const fillUps = recalculateOneVehicleFillUps(
+        withActiveVehicle,
+        state.fillUps,
+        action.id,
+      );
+
       return {
         ...state,
+        fillUps,
         vehicles: syncCurrentOdometers(
           withActiveVehicle,
-          state.fillUps,
+          fillUps,
           action.updatedAt,
         ),
       };
@@ -172,7 +206,11 @@ function appReducer(state: AppState, action: AppAction): AppState {
     }
 
     case "addFillUp": {
-      const fillUps = [...state.fillUps, action.fillUp];
+      const fillUps = recalculateOneVehicleFillUps(
+        state.vehicles,
+        [...state.fillUps, action.fillUp],
+        action.fillUp.vehicleId,
+      );
       return {
         ...state,
         fillUps,
@@ -186,7 +224,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         return state;
       }
 
-      const fillUps = state.fillUps.map((fillUp) =>
+      const changedFillUps = state.fillUps.map((fillUp) =>
         fillUp.id === action.id
           ? {
               ...fillUp,
@@ -198,6 +236,11 @@ function appReducer(state: AppState, action: AppAction): AppState {
             }
           : fillUp,
       );
+      const fillUps = recalculateOneVehicleFillUps(
+        state.vehicles,
+        changedFillUps,
+        existingFillUp.vehicleId,
+      );
 
       return {
         ...state,
@@ -207,7 +250,16 @@ function appReducer(state: AppState, action: AppAction): AppState {
     }
 
     case "deleteFillUp": {
-      const fillUps = state.fillUps.filter((fillUp) => fillUp.id !== action.id);
+      const deletedFillUp = state.fillUps.find((fillUp) => fillUp.id === action.id);
+      const remainingFillUps = state.fillUps.filter((fillUp) => fillUp.id !== action.id);
+      const fillUps = deletedFillUp
+        ? recalculateOneVehicleFillUps(
+            state.vehicles,
+            remainingFillUps,
+            deletedFillUp.vehicleId,
+          )
+        : remainingFillUps;
+
       return {
         ...state,
         fillUps,
@@ -221,12 +273,17 @@ function appReducer(state: AppState, action: AppAction): AppState {
         settings: { ...state.settings, ...action.changes },
       };
 
-    case "replaceData":
+    case "replaceData": {
+      const vehicles = chooseOneActive(action.data.vehicles);
+      const fillUps = recalculateAllFillUps(vehicles, action.data.fillUps);
+
       return {
         ...action.data,
-        vehicles: chooseOneActive(action.data.vehicles),
+        vehicles: syncCurrentOdometers(vehicles, fillUps),
+        fillUps,
         isHydrated: true,
       };
+    }
 
     case "addDemoData": {
       const hasActiveVehicle = state.vehicles.some((vehicle) => vehicle.isActive);
@@ -236,7 +293,11 @@ function appReducer(state: AppState, action: AppAction): AppState {
         updatedAt: action.updatedAt,
       };
       const vehicles = [...state.vehicles, demoVehicle];
-      const fillUps = [...state.fillUps, ...action.demo.fillUps];
+      const fillUps = recalculateOneVehicleFillUps(
+        vehicles,
+        [...state.fillUps, ...action.demo.fillUps],
+        demoVehicle.id,
+      );
 
       return {
         ...state,

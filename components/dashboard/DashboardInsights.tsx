@@ -14,11 +14,19 @@ import {
   YAxis,
 } from "recharts";
 
-import type { FillUp } from "@/lib/types";
+import {
+  fromKilometres,
+  fromKilometresPerLitre,
+  fromLitres,
+  resolveUnits,
+} from "@/lib/units";
+import type { AppSettings, FillUp, Vehicle } from "@/lib/types";
 
 interface DashboardInsightsProps {
   currencySymbol: string;
   fillUps: FillUp[];
+  settings: AppSettings;
+  vehicle: Vehicle;
 }
 
 interface MonthlySpend {
@@ -105,7 +113,10 @@ function ChartTooltip({
 export function DashboardInsights({
   currencySymbol,
   fillUps,
+  settings,
+  vehicle,
 }: DashboardInsightsProps) {
+  const units = resolveUnits(settings, vehicle);
   const now = new Date();
   const currentMonth = monthKey(now);
   const previousMonth = monthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
@@ -121,8 +132,11 @@ export function DashboardInsights({
   );
   const totalCost = fillUps.reduce((total, fillUp) => total + fillUp.totalCost, 0);
   const totalFuel = fillUps.reduce((total, fillUp) => total + fillUp.fuelAdded, 0);
-  const costPerKilometre = distanceTotal > 0 ? totalCost / distanceTotal : null;
-  const averageFuelPrice = totalFuel > 0 ? totalCost / totalFuel : null;
+  const displayDistanceTotal = fromKilometres(distanceTotal, units.distance);
+  const displayFuelTotal = fromLitres(totalFuel, units.volume);
+  const costPerDistance =
+    displayDistanceTotal > 0 ? totalCost / displayDistanceTotal : null;
+  const averageFuelPrice = displayFuelTotal > 0 ? totalCost / displayFuelTotal : null;
   const spending = sixMonthSpending(fillUps);
   const economyTrend = fillUps
     .filter((fillUp) => fillUp.economy !== null)
@@ -135,7 +149,10 @@ export function DashboardInsights({
         day: "numeric",
         month: "short",
       }).format(toDate(fillUp.date)),
-      economy: fillUp.economy as number,
+      economy: fromKilometresPerLitre(
+        fillUp.economy as number,
+        units.consumption,
+      ) as number,
     }));
   const averageEconomy =
     economyTrend.length > 0
@@ -152,14 +169,14 @@ export function DashboardInsights({
         <div className="flex items-end justify-between gap-4">
           <div>
             <p className="text-[11px] font-bold tracking-[0.16em] text-accent">COSTS</p>
-            <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-text-primary">
+            <p className="mt-2 text-3xl font-bold tracking-tight font-mono tabular-nums text-text-primary">
               {formatCurrency(currencySymbol, currentMonthSpend)}
             </p>
             <p className="mt-1 text-xs text-text-muted">Spent this month</p>
           </div>
           <div className="rounded-2xl border border-border-default bg-bg-input px-3 py-2 text-right">
             <p className="text-[9px] font-bold tracking-[0.12em] text-text-muted">LAST MONTH</p>
-            <p className="mt-1 text-xs font-bold tabular-nums text-text-primary">
+            <p className="mt-1 text-xs font-bold font-mono tabular-nums text-text-primary">
               {formatCurrency(currencySymbol, previousMonthSpend)}
             </p>
             <p className={`mt-1 text-[10px] font-bold ${
@@ -174,19 +191,21 @@ export function DashboardInsights({
 
         <div className="mt-5 grid grid-cols-2 gap-3 border-t border-border-default pt-4">
           <div>
-            <p className="text-[10px] font-bold tracking-[0.12em] text-text-muted">COST / KM</p>
-            <p className="mt-1 text-sm font-bold tabular-nums text-text-primary">
-              {costPerKilometre === null
+            <p className="text-[10px] font-bold tracking-[0.12em] text-text-muted">
+              COST / {units.distanceLabel.toUpperCase()}
+            </p>
+            <p className="mt-1 text-sm font-bold font-mono tabular-nums text-text-primary">
+              {costPerDistance === null
                 ? "—"
-                : `${formatCurrency(currencySymbol, costPerKilometre)}/km`}
+                : `${formatCurrency(currencySymbol, costPerDistance)}/${units.distanceLabel}`}
             </p>
           </div>
           <div>
             <p className="text-[10px] font-bold tracking-[0.12em] text-text-muted">AVG FUEL PRICE</p>
-            <p className="mt-1 text-sm font-bold tabular-nums text-text-primary">
+            <p className="mt-1 text-sm font-bold font-mono tabular-nums text-text-primary">
               {averageFuelPrice === null
                 ? "—"
-                : `${formatCurrency(currencySymbol, averageFuelPrice)}/L`}
+                : `${formatCurrency(currencySymbol, averageFuelPrice)}/${units.volumeLabel}`}
             </p>
           </div>
         </div>
@@ -202,7 +221,7 @@ export function DashboardInsights({
           </div>
           {averageEconomy !== null ? (
             <span className="rounded-full bg-accent/10 px-2.5 py-1 text-[10px] font-bold text-accent">
-              AVG {formatNumber(averageEconomy)} km/L
+              AVG {formatNumber(averageEconomy)} {units.economyLabel}
             </span>
           ) : null}
         </div>
@@ -232,7 +251,7 @@ export function DashboardInsights({
                   tickFormatter={(value) => `${value}`}
                 />
                 <Tooltip
-                  content={<ChartTooltip suffix=" km/L" />}
+                  content={<ChartTooltip suffix={` ${units.economyLabel}`} />}
                   cursor={{ stroke: "#6B6B74", strokeDasharray: "3 3" }}
                 />
                 {averageEconomy !== null ? (

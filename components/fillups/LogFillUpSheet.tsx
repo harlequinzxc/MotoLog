@@ -13,7 +13,14 @@ import { useState, type FormEvent } from "react";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { useAppContext } from "@/context/AppContext";
 import { calculateFillUpMetrics } from "@/lib/calculations";
-import type { FillUp, Vehicle } from "@/lib/types";
+import {
+  fromKilometres,
+  fromLitres,
+  resolveUnits,
+  toKilometres,
+  toLitres,
+} from "@/lib/units";
+import type { AppSettings, FillUp, Vehicle } from "@/lib/types";
 
 interface LogFillUpSheetProps {
   fillUp?: FillUp;
@@ -34,9 +41,6 @@ interface FillUpFormState {
 type FormErrors = Partial<
   Record<"fuelAdded" | "odometer" | "totalCost", string>
 >;
-
-const IMPERIAL_GALLON_IN_LITRES = 4.546_09;
-const MILE_IN_KILOMETRES = 1.609_344;
 
 function today() {
   const date = new Date();
@@ -65,26 +69,16 @@ function formatNumber(value: number) {
   }).format(value);
 }
 
-function isImperialVehicle(vehicle: Vehicle) {
-  return vehicle.unitPreference?.distance === "mi";
-}
-
-function volumeFactor(vehicle: Vehicle) {
-  return vehicle.unitPreference?.volume === "gal-us"
-    ? 3.785_411_784
-    : IMPERIAL_GALLON_IN_LITRES;
-}
-
-function createInitialForm(vehicle: Vehicle, fillUp?: FillUp): FillUpFormState {
-  const isImperial = isImperialVehicle(vehicle);
+function createInitialForm(
+  vehicle: Vehicle,
+  settings: AppSettings,
+  fillUp?: FillUp,
+): FillUpFormState {
+  const units = resolveUnits(settings, vehicle);
   const sourceOdometer = fillUp?.odometer ?? vehicle.currentOdometer;
   const sourceFuelAdded = fillUp?.fuelAdded ?? 0;
-  const odometer = isImperial
-    ? sourceOdometer / MILE_IN_KILOMETRES
-    : sourceOdometer;
-  const fuelAdded = isImperial
-    ? sourceFuelAdded / volumeFactor(vehicle)
-    : sourceFuelAdded;
+  const odometer = fromKilometres(sourceOdometer, units.distance);
+  const fuelAdded = fromLitres(sourceFuelAdded, units.volume);
 
   return {
     date: fillUp?.date ?? today(),
@@ -105,20 +99,19 @@ export function LogFillUpSheet({
 }: LogFillUpSheetProps) {
   const { addFillUp, getVehicleFillUps, settings, updateFillUp } = useAppContext();
   const [form, setForm] = useState<FillUpFormState>(() =>
-    createInitialForm(vehicle, fillUp),
+    createInitialForm(vehicle, settings, fillUp),
   );
   const [errors, setErrors] = useState<FormErrors>({});
 
-  const isImperial = isImperialVehicle(vehicle);
-  const currentOdometer = isImperial
-    ? vehicle.currentOdometer / MILE_IN_KILOMETRES
-    : vehicle.currentOdometer;
-  const distanceUnit = isImperial ? "mi" : "km";
-  const volumeUnit = isImperial ? "gal" : "L";
+  const units = resolveUnits(settings, vehicle);
+  const currentOdometer = fromKilometres(vehicle.currentOdometer, units.distance);
+  const distanceUnit = units.distanceLabel;
+  const volumeUnit = units.volumeLabel;
   const minimumOdometer = fillUp ? vehicle.startingOdometer : vehicle.currentOdometer;
-  const minimumDisplayOdometer = isImperial
-    ? minimumOdometer / MILE_IN_KILOMETRES
-    : minimumOdometer;
+  const minimumDisplayOdometer = fromKilometres(
+    minimumOdometer,
+    units.distance,
+  );
   const odometerInput = numberOrNaN(form.odometer);
   const odometerDelta = Number.isFinite(odometerInput)
     ? odometerInput - currentOdometer
@@ -141,12 +134,8 @@ export function LogFillUpSheet({
     const displayOdometer = numberOrNaN(form.odometer);
     const displayFuelAdded = numberOrNaN(form.fuelAdded);
     const totalCost = numberOrNaN(form.totalCost);
-    const odometer = isImperial
-      ? displayOdometer * MILE_IN_KILOMETRES
-      : displayOdometer;
-    const fuelAdded = isImperial
-      ? displayFuelAdded * volumeFactor(vehicle)
-      : displayFuelAdded;
+    const odometer = toKilometres(displayOdometer, units.distance);
+    const fuelAdded = toLitres(displayFuelAdded, units.volume);
     const nextErrors: FormErrors = {};
 
     if (!Number.isFinite(displayOdometer) || odometer < minimumOdometer) {

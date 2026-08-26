@@ -103,7 +103,12 @@ export function SettingsScreen() {
     updateSettings({
       consumptionUnit,
       distanceUnit: usesMiles ? "mi" : "km",
-      volumeUnit: usesMiles ? "gal-uk" : "L",
+      volumeUnit:
+        consumptionUnit === "mpg-us"
+          ? "gal-us"
+          : consumptionUnit === "mpg-uk"
+            ? "gal-uk"
+            : "L",
     });
   };
 
@@ -325,12 +330,13 @@ export function SettingsScreen() {
           </div>
 
           <p className="mt-5 text-[10px] font-bold tracking-[0.14em] text-text-muted">CONSUMPTION</p>
-          <div className="mt-2 grid grid-cols-3 rounded-2xl border border-border-default bg-bg-input p-1">
+          <div className="mt-2 grid grid-cols-2 rounded-2xl border border-border-default bg-bg-input p-1">
             {(
               [
                 ["km/L", "km/L"],
                 ["L/100km", "L/100"],
-                ["mpg-uk", "MPG"],
+                ["mpg-us", "MPG US"],
+                ["mpg-uk", "MPG UK"],
               ] as const
             ).map(([unit, label]) => {
               const selected = settings.consumptionUnit === unit;

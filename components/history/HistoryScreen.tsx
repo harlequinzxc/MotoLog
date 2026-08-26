@@ -9,6 +9,7 @@ import { FillUpCard } from "@/components/history/FillUpCard";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAppContext } from "@/context/AppContext";
 import { APP_NAME, APP_VERSION } from "@/lib/constants";
+import { formatEconomy, resolveUnits } from "@/lib/units";
 import type { FillUp } from "@/lib/types";
 
 type FillTypeFilter = "all" | "full" | "partial";
@@ -76,10 +77,6 @@ function sortFillUps(fillUps: FillUp[], sort: SortOption) {
   });
 }
 
-function formatEconomy(value: number | null) {
-  return value === null ? "—" : `${value.toFixed(1)} km/L`;
-}
-
 /** Searchable, filterable, month-grouped fill-up history. */
 export function HistoryScreen() {
   const { deleteFillUp, fillUps, isHydrated, settings, vehicles } =
@@ -98,6 +95,11 @@ export function HistoryScreen() {
     () => new Map(vehicles.map((vehicle) => [vehicle.id, vehicle.name])),
     [vehicles],
   );
+  const vehiclesById = useMemo(
+    () => new Map(vehicles.map((vehicle) => [vehicle.id, vehicle])),
+    [vehicles],
+  );
+  const globalUnits = resolveUnits(settings);
   const filteredFillUps = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
 
@@ -199,8 +201,8 @@ export function HistoryScreen() {
               <p className="text-[9px] font-bold tracking-[0.12em] text-text-muted">
                 {label}
               </p>
-              <p className="mt-1 text-xs font-bold tabular-nums text-text-primary">
-                {formatEconomy(value as number | null)}
+              <p className="mt-1 text-xs font-bold font-mono tabular-nums text-text-primary">
+                {formatEconomy(value as number | null, globalUnits)}
               </p>
             </div>
           ))}
@@ -311,6 +313,8 @@ export function HistoryScreen() {
                           current === fillUp.id ? null : fillUp.id,
                         )
                       }
+                      settings={settings}
+                      vehicle={vehiclesById.get(fillUp.vehicleId)}
                       vehicleName={vehicleNames.get(fillUp.vehicleId)}
                     />
                   ))}

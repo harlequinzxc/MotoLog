@@ -56,6 +56,13 @@ select {
   font: inherit;
 }
 
+input[type="number"],
+input[type="date"],
+.numeric-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
+}
+
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
@@ -80,11 +87,15 @@ select:focus-visible {
 }
 
 @keyframes bottom-sheet-in {
-  from {
+  0% {
     opacity: 0;
     transform: translateY(100%);
   }
-  to {
+  72% {
+    opacity: 1;
+    transform: translateY(-1.25%);
+  }
+  100% {
     opacity: 1;
     transform: translateY(0);
   }
@@ -95,7 +106,7 @@ select:focus-visible {
 }
 
 .animate-bottom-sheet {
-  animation: bottom-sheet-in 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: bottom-sheet-in 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -139,3 +139,59 @@ export function calculateFillUpMetrics({
     economy: calculateEconomy(odometer - economyAnchorOdometer, fuelSinceLastFull),
   };
 }
+
+/**
+ * Rebuilds distance and economy values for one vehicle in chronological order.
+ * This is used after a historical edit or deletion so every later entry remains
+ * mathematically consistent with partial-fill fuel accumulation.
+ */
+export function recalculateVehicleFillUps(
+  vehicle: Vehicle,
+  fillUps: FillUp[],
+): FillUp[] {
+  const ordered = fillUps
+    .filter((fillUp) => fillUp.vehicleId === vehicle.id)
+    .sort(
+      (first, second) =>
+        first.date.localeCompare(second.date) ||
+        first.odometer - second.odometer ||
+        first.createdAt.localeCompare(second.createdAt),
+    );
+  const recalculated = new Map<string, FillUp>();
+  let previousOdometer = vehicle.startingOdometer;
+  let lastFullOdometer: number | null = null;
+  let fuelSinceLastFull = 0;
+
+  ordered.forEach((fillUp) => {
+    const distance =
+      Number.isFinite(fillUp.odometer) && fillUp.odometer >= previousOdometer
+        ? fillUp.odometer - previousOdometer
+        : null;
+    const validFuel =
+      Number.isFinite(fillUp.fuelAdded) && fillUp.fuelAdded > 0
+        ? fillUp.fuelAdded
+        : 0;
+    let economy: number | null = null;
+
+    if (fillUp.isFullTank) {
+      const anchorOdometer = lastFullOdometer ?? vehicle.startingOdometer;
+      economy = calculateEconomy(
+        fillUp.odometer - anchorOdometer,
+        fuelSinceLastFull + validFuel,
+      );
+      lastFullOdometer = fillUp.odometer;
+      fuelSinceLastFull = 0;
+    } else {
+      fuelSinceLastFull += validFuel;
+    }
+
+    recalculated.set(fillUp.id, {
+      ...fillUp,
+      distance,
+      economy,
+    });
+    previousOdometer = fillUp.odometer;
+  });
+
+  return fillUps.map((fillUp) => recalculated.get(fillUp.id) ?? fillUp);
+}

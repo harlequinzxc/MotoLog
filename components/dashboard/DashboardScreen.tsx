@@ -18,6 +18,13 @@ import { GarageScreen } from "@/components/garage/GarageScreen";
 import { useAppContext } from "@/context/AppContext";
 import { calculateRangeBreakdown } from "@/lib/calculations";
 import { APP_NAME, APP_VERSION } from "@/lib/constants";
+import {
+  formatDistance,
+  formatEconomy,
+  formatVolume,
+  fromKilometresPerLitre,
+  resolveUnits,
+} from "@/lib/units";
 
 function formatNumber(value: number, maximumFractionDigits = 1) {
   return new Intl.NumberFormat(undefined, { maximumFractionDigits }).format(value);
@@ -86,6 +93,11 @@ export function DashboardScreen() {
   const bestEconomy = economies.length > 0 ? Math.max(...economies) : null;
   const worstEconomy = economies.length > 0 ? Math.min(...economies) : null;
   const trend = trendInsight(economies);
+  const units = resolveUnits(settings, activeVehicle);
+  const displayAverageEconomy =
+    averageEconomy === null
+      ? null
+      : fromKilometresPerLitre(averageEconomy, units.consumption);
   const range = activeVehicle && averageEconomy
     ? calculateRangeBreakdown(
         activeVehicle.tankCapacity,
@@ -189,10 +201,12 @@ export function DashboardScreen() {
           </div>
 
           <div className="mt-5 flex items-end gap-2">
-            <p className="text-5xl font-bold leading-none tracking-[-0.06em] tabular-nums text-text-primary">
-              {averageEconomy === null ? "—" : formatNumber(averageEconomy)}
+            <p className="text-5xl font-bold leading-none tracking-[-0.06em] font-mono tabular-nums text-text-primary">
+              {displayAverageEconomy === null ? "—" : formatNumber(displayAverageEconomy)}
             </p>
-            <p className="pb-1 text-sm font-bold text-text-secondary">km/L avg</p>
+            <p className="pb-1 text-sm font-bold text-text-secondary">
+              {units.economyLabel} avg
+            </p>
           </div>
           <p className="mt-2 text-xs text-text-muted">
             {averageEconomy === null
@@ -203,14 +217,14 @@ export function DashboardScreen() {
           <div className="mt-5 grid grid-cols-2 gap-3 border-t border-border-default pt-4">
             <div>
               <p className="text-[10px] font-bold tracking-[0.12em] text-text-muted">BEST</p>
-              <p className="mt-1 text-sm font-bold tabular-nums text-text-primary">
-                {bestEconomy === null ? "—" : `${formatNumber(bestEconomy)} km/L`}
+              <p className="mt-1 text-sm font-bold font-mono tabular-nums text-text-primary">
+                {bestEconomy === null ? "—" : formatEconomy(bestEconomy, units)}
               </p>
             </div>
             <div>
               <p className="text-[10px] font-bold tracking-[0.12em] text-text-muted">WORST</p>
-              <p className="mt-1 text-sm font-bold tabular-nums text-text-primary">
-                {worstEconomy === null ? "—" : `${formatNumber(worstEconomy)} km/L`}
+              <p className="mt-1 text-sm font-bold font-mono tabular-nums text-text-primary">
+                {worstEconomy === null ? "—" : formatEconomy(worstEconomy, units)}
               </p>
             </div>
           </div>
@@ -222,8 +236,8 @@ export function DashboardScreen() {
               <p className="text-[11px] font-bold tracking-[0.16em] text-accent">
                 FULL TANK RANGE
               </p>
-              <p className="mt-2 text-3xl font-bold tracking-tight tabular-nums text-text-primary">
-                {range ? `~${formatNumber(range.totalRange, 0)} km` : "—"}
+              <p className="mt-2 text-3xl font-bold tracking-tight font-mono tabular-nums text-text-primary">
+                {range ? `~${formatDistance(range.totalRange, units)}` : "—"}
               </p>
             </div>
             <span className="grid size-11 place-items-center rounded-2xl bg-accent/10 text-accent">
@@ -248,18 +262,18 @@ export function DashboardScreen() {
           <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
             <div>
               <p className="font-bold text-text-primary">
-                Main · {formatNumber(mainTankLitres, 1)} L
+                Main · {formatVolume(mainTankLitres, units)}
               </p>
               <p className="mt-1 text-text-muted">
-                {range ? `~${formatNumber(range.mainRange, 0)} km` : "Range pending"}
+                {range ? `~${formatDistance(range.mainRange, units)}` : "Range pending"}
               </p>
             </div>
             <div className="border-l border-border-default pl-3">
               <p className="font-bold text-text-primary">
-                Reserve · {formatNumber(activeVehicle.reserve, 1)} L
+                Reserve · {formatVolume(activeVehicle.reserve, units)}
               </p>
               <p className="mt-1 text-text-muted">
-                {range ? `~${formatNumber(range.reserveRange, 0)} km` : "Range pending"}
+                {range ? `~${formatDistance(range.reserveRange, units)}` : "Range pending"}
               </p>
             </div>
           </div>
@@ -275,8 +289,8 @@ export function DashboardScreen() {
               <p className="mt-3 text-[9px] font-bold tracking-[0.12em] text-text-muted">
                 AVG FILL
               </p>
-              <p className="mt-1 text-sm font-bold tabular-nums text-text-primary">
-                {averageFill === null ? "—" : `${formatNumber(averageFill)} L`}
+              <p className="mt-1 text-sm font-bold font-mono tabular-nums text-text-primary">
+                {averageFill === null ? "—" : formatVolume(averageFill, units)}
               </p>
             </div>
             <div className="border-r border-border-default px-3 py-4">
@@ -284,8 +298,8 @@ export function DashboardScreen() {
               <p className="mt-3 text-[9px] font-bold tracking-[0.12em] text-text-muted">
                 TOTAL FUEL
               </p>
-              <p className="mt-1 text-sm font-bold tabular-nums text-text-primary">
-                {vehicleFillUps.length === 0 ? "—" : `${formatNumber(totalFuel)} L`}
+              <p className="mt-1 text-sm font-bold font-mono tabular-nums text-text-primary">
+                {vehicleFillUps.length === 0 ? "—" : formatVolume(totalFuel, units)}
               </p>
             </div>
             <div className="px-3 py-4">
@@ -303,6 +317,8 @@ export function DashboardScreen() {
         <DashboardInsights
           currencySymbol={settings.currencySymbol}
           fillUps={vehicleFillUps}
+          settings={settings}
+          vehicle={activeVehicle}
         />
       </div>
     </section>
