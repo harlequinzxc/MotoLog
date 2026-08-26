@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 
+import { MotoMark } from "@/components/branding/MotoMark";
 import { APP_NAME, APP_VERSION } from "@/lib/constants";
 
 interface PagePlaceholderProps {
@@ -19,9 +20,12 @@ export function PagePlaceholder({
   return (
     <section className="mx-auto flex min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] w-full max-w-lg flex-col px-5 pb-8 pt-[max(2rem,env(safe-area-inset-top))]">
       <header className="flex items-center justify-between">
-        <span className="text-sm font-bold tracking-tight text-text-primary">
-          {APP_NAME}
-        </span>
+        <div className="flex items-center gap-2.5">
+          <MotoMark size={31} />
+          <span className="text-sm font-bold tracking-tight text-text-primary">
+            {APP_NAME}
+          </span>
+        </div>
         <span className="rounded-full border border-border-default bg-bg-card px-3 py-1 text-xs font-medium text-text-secondary">
           {APP_VERSION}
         </span>

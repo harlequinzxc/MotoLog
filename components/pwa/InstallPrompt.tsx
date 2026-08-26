@@ -1,8 +1,9 @@
 "use client";
 
-import { Download, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { MotoMark } from "@/components/branding/MotoMark";
 import { APP_NAME } from "@/lib/constants";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -54,11 +55,15 @@ export function InstallPrompt() {
     }
 
     setIsPrompting(true);
-    await deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    setDeferredPrompt(null);
-    setIsVisible(false);
-    setIsPrompting(false);
+
+    try {
+      await deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
+    } finally {
+      setDeferredPrompt(null);
+      setIsVisible(false);
+      setIsPrompting(false);
+    }
   };
 
   if (!deferredPrompt || !isVisible) {
@@ -70,14 +75,12 @@ export function InstallPrompt() {
       aria-label={`Install ${APP_NAME}`}
       className="fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] left-1/2 z-40 flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 items-center gap-3 rounded-2xl border border-border-default bg-bg-card p-3 shadow-[0_16px_48px_rgb(0_0_0_/_0.45)]"
     >
-      <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent/15 text-accent">
-        <Download aria-hidden="true" size={18} strokeWidth={2.5} />
-      </span>
+      <MotoMark className="shrink-0" size={36} />
       <p className="min-w-0 flex-1 text-sm font-medium leading-5 text-text-primary">
         Install {APP_NAME} for quick access.
       </p>
       <button
-        className="rounded-xl bg-accent px-3 py-2 text-xs font-bold text-bg-base transition-opacity hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+        className="rounded-xl bg-accent px-3 py-2 text-xs font-bold text-text-primary transition-opacity hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
         disabled={isPrompting}
         onClick={promptToInstall}
         type="button"

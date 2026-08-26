@@ -1,5 +1,5 @@
 /* MotoLog's intentionally small app-shell service worker. */
-const CACHE_NAME = "motolog-shell-v1";
+const CACHE_NAME = "motolog-shell-v2";
 const APP_SHELL = [
   "/",
   "/manifest.json",
