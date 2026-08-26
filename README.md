@@ -25,3 +25,10 @@ npm run build
 The app includes a standalone portrait web manifest, iOS-compatible PWA meta
 tags, install icons, and a persisted accent-theme provider. The initial app
 version is defined in `lib/constants.ts`.
+
+## Installing on Chrome for Android
+
+On a secure deployment such as Vercel, MotoLog registers an app-shell service
+worker and meets Chrome's manifest requirements. When Chrome emits its
+installation event, the app shows an **Install MotoLog** prompt; tapping it opens
+Chrome's native installation dialog.

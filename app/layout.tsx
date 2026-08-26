@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 
 import { BottomNav } from "@/components/navigation/BottomNav";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { ServiceWorkerRegistration } from "@/components/pwa/ServiceWorkerRegistration";
 import { ThemeProvider } from "@/lib/theme";
 
 import "./globals.css";
@@ -50,10 +52,12 @@ export default function RootLayout({
       </head>
       <body>
         <ThemeProvider>
+          <ServiceWorkerRegistration />
           <div className="min-h-[100dvh] pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
             {children}
           </div>
           <BottomNav />
+          <InstallPrompt />
         </ThemeProvider>
       </body>
     </html>
