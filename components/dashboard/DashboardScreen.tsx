@@ -3,13 +3,14 @@
 import {
   Bike,
   CarFront,
+  Check,
   ChevronDown,
   Fuel,
   Gauge,
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { DashboardInsights } from "@/components/dashboard/DashboardInsights";
 import { GarageScreen } from "@/components/garage/GarageScreen";
@@ -97,6 +98,7 @@ export function DashboardScreen() {
     vehicles,
   } = useAppContext();
   const { accentTheme } = useTheme();
+  const [isVehicleMenuOpen, setIsVehicleMenuOpen] = useState(false);
   const vehicleFillUps = useMemo(
     () => (activeVehicle ? getVehicleFillUps(activeVehicle.id) : []),
     [activeVehicle, getVehicleFillUps],
@@ -180,38 +182,72 @@ export function DashboardScreen() {
         </div>
       </header>
 
-      <label className="mt-6 flex items-center gap-3 rounded-2xl border border-border-default bg-bg-card p-4 shadow-[0_10px_30px_rgb(0_0_0_/_0.12)]">
-        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-bg-elevated text-text-secondary">
-          <VehicleIcon aria-hidden="true" size={20} />
-        </span>
-        <span className="min-w-0 flex-1">
-          <span className="flex items-center gap-1.5 truncate text-base font-bold text-text-primary">
-            {activeVehicle.name}
-            {vehicles.length > 1 ? <ChevronDown aria-hidden="true" size={13} className="text-text-muted" /> : null}
+      <div className="relative z-40 mt-6">
+        <div className="flex items-center gap-3 rounded-2xl border border-border-default bg-bg-card p-4 shadow-[0_10px_30px_rgb(0_0_0_/_0.12)]">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-bg-elevated text-text-secondary">
+            <VehicleIcon aria-hidden="true" size={20} />
           </span>
-          <span className="mt-1 block text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">
-            {activeVehicle.year ?? "—"} · {activeVehicle.type}
+          {vehicles.length > 1 ? (
+            <button
+              aria-expanded={isVehicleMenuOpen}
+              className="min-w-0 flex-1 text-left"
+              onClick={() => setIsVehicleMenuOpen((open) => !open)}
+              type="button"
+            >
+              <span className="flex items-center gap-1.5 truncate text-base font-bold text-text-primary">
+                {activeVehicle.name}
+                <ChevronDown aria-hidden="true" className={`shrink-0 text-text-muted transition-transform ${isVehicleMenuOpen ? "rotate-180" : ""}`} size={14} />
+              </span>
+              <span className="mt-1 block text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">
+                {activeVehicle.year ?? "—"} · {activeVehicle.type}
+              </span>
+            </button>
+          ) : (
+            <span className="min-w-0 flex-1">
+              <span className="flex items-center gap-1.5 truncate text-base font-bold text-text-primary">{activeVehicle.name}</span>
+              <span className="mt-1 block text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">
+                {activeVehicle.year ?? "—"} · {activeVehicle.type}
+              </span>
+            </span>
+          )}
+          <span className="shrink-0 rounded-xl bg-bg-elevated px-3 py-2 text-right">
+            <span className="block text-[9px] font-medium uppercase tracking-[0.08em] text-text-muted">ODO</span>
+            <span className="mt-0.5 block font-mono text-sm font-bold tabular-nums text-text-primary">
+              {formatDistance(activeVehicle.currentOdometer, units)}
+            </span>
           </span>
-        </span>
-        <span className="relative shrink-0 rounded-xl border border-border-default px-3 py-2 text-right">
-          <span className="block text-[9px] font-medium uppercase tracking-[0.08em] text-text-muted">ODO</span>
-          <span className="mt-0.5 block font-mono text-sm font-bold tabular-nums text-text-primary">
-            {formatDistance(activeVehicle.currentOdometer, units)}
-          </span>
-          <select
-            aria-label="Select active vehicle"
-            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-            onChange={(event) => setActiveVehicle(event.target.value)}
-            value={activeVehicle.id}
-          >
-            {vehicles.map((vehicle) => (
-              <option key={vehicle.id} value={vehicle.id}>
-                {vehicle.name}
-              </option>
-            ))}
-          </select>
-        </span>
-      </label>
+        </div>
+
+        {isVehicleMenuOpen && vehicles.length > 1 ? (
+          <div className="absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-border-default bg-bg-card/95 p-2 shadow-2xl backdrop-blur-xl">
+            {vehicles.map((vehicle) => {
+              const OptionIcon = vehicle.type === "motorcycle" ? Bike : CarFront;
+              const optionUnits = resolveUnits(settings, vehicle);
+              const selected = vehicle.id === activeVehicle.id;
+              return (
+                <button
+                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${selected ? "bg-accent/10" : "hover:bg-bg-elevated"}`}
+                  key={vehicle.id}
+                  onClick={() => {
+                    setActiveVehicle(vehicle.id);
+                    setIsVehicleMenuOpen(false);
+                  }}
+                  type="button"
+                >
+                  <span className={`grid size-9 place-items-center rounded-xl ${selected ? "bg-accent/15 text-accent" : "bg-bg-elevated text-text-secondary"}`}>
+                    <OptionIcon aria-hidden="true" size={18} />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-bold text-text-primary">{vehicle.name}</span>
+                    <span className="mt-0.5 block text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">{optionUnits.distanceLabel} · {optionUnits.volumeLabel}</span>
+                  </span>
+                  {selected ? <Check aria-hidden="true" size={17} className="text-accent" strokeWidth={3} /> : null}
+                </button>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
 
       <div className="mt-4 grid gap-3">
         <article className="relative overflow-hidden rounded-2xl border border-border-default bg-bg-card px-4 py-4 shadow-[0_0_40px_rgb(var(--color-accent)_/_0.06)]">
@@ -251,41 +287,41 @@ export function DashboardScreen() {
               </div>
             </div>
           ) : null}
-          </div>
-        </article>
 
-        <article className="rounded-2xl border border-border-default bg-bg-card px-4 py-4">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">FULL TANK RANGE</p>
-            <span className="rounded-lg border border-border-default px-2.5 py-1 font-mono text-xs font-semibold tabular-nums text-text-secondary">
-              {formatVolume(activeVehicle.tankCapacity, units)}
-            </span>
-          </div>
-          <div className="mt-4 flex items-baseline gap-2">
-            <p className="font-mono text-5xl font-bold leading-none tabular-nums text-text-primary">
-              {displayedRange === null ? "—" : formatNumber(displayedRange, 0)}
+          <div className="mt-4 border-t border-border-default pt-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-text-muted">FULL TANK RANGE</p>
+              <span className="rounded-lg bg-bg-elevated px-2.5 py-1 font-mono text-xs font-semibold tabular-nums text-text-secondary">
+                {formatVolume(activeVehicle.tankCapacity, units)}
+              </span>
+            </div>
+            <div className="mt-3 flex items-baseline gap-2">
+              <p className="font-mono text-4xl font-extrabold leading-none tabular-nums text-text-primary">
+                {displayedRange === null ? "—" : formatNumber(displayedRange, 0)}
+              </p>
+              <span className="text-lg font-semibold text-accent">{units.distanceLabel}</span>
+            </div>
+            <p className="mt-1 text-[13px] text-text-muted">
+              {formatVolume(activeVehicle.tankCapacity, units)} × {displayAverageEconomy === null ? "—" : formatNumber(displayAverageEconomy)} {units.economyLabel} average
             </p>
-            <span className="text-lg font-semibold text-accent">{units.distanceLabel}</span>
-          </div>
-          <p className="mt-2 text-[13px] text-text-muted">
-            {formatVolume(activeVehicle.tankCapacity, units)} × {displayAverageEconomy === null ? "—" : formatNumber(displayAverageEconomy)} {units.economyLabel} average
-          </p>
 
-          <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-bg-elevated shadow-inner">
-            <span className="bg-accent" style={{ width: `${Math.max(mainRangePercentage, 0)}%` }} />
-            <span className="ml-0.5 flex-1" style={{ backgroundColor: reserveColor }} />
+            <div className="mt-4 flex h-3 gap-1 overflow-hidden">
+              <span className="rounded-full bg-accent" style={{ width: `${Math.max(mainRangePercentage, 0)}%` }} />
+              <span className="min-w-1 flex-1 rounded-full" style={{ backgroundColor: reserveColor }} />
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-bg-elevated p-3">
+                <p className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.06em] text-text-secondary"><span className="size-2 rounded-full bg-accent" />Main tank</p>
+                <p className="mt-1.5 font-mono text-xl font-bold tabular-nums text-text-primary">{displayedMainRange === null ? "—" : formatNumber(displayedMainRange, 0)}<span className="ml-1 text-xs font-medium text-text-muted">{units.distanceLabel}</span></p>
+                <p className="mt-1 text-xs text-text-muted">{formatVolume(mainTankLitres, units)}</p>
+              </div>
+              <div className="rounded-xl bg-bg-elevated p-3">
+                <p className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.06em] text-text-secondary"><span className="size-2 rounded-full" style={{ backgroundColor: reserveColor }} />Reserve tank</p>
+                <p className="mt-1.5 font-mono text-xl font-bold tabular-nums text-text-primary">{displayedReserveRange === null ? "—" : formatNumber(displayedReserveRange, 0)}<span className="ml-1 text-xs font-medium text-text-muted">{units.distanceLabel}</span></p>
+                <p className="mt-1 text-xs text-text-muted">{formatVolume(activeVehicle.reserve, units)}</p>
+              </div>
+            </div>
           </div>
-          <div className="mt-4 grid grid-cols-2 gap-3">
-            <div className="rounded-xl bg-bg-elevated p-3">
-              <p className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.06em] text-text-secondary"><span className="size-2 rounded-full bg-accent" />Main tank</p>
-              <p className="mt-2 font-mono text-[22px] font-bold tabular-nums text-text-primary">{displayedMainRange === null ? "—" : formatNumber(displayedMainRange, 0)}<span className="ml-1 text-[13px] font-medium text-text-muted">{units.distanceLabel}</span></p>
-              <p className="mt-1 text-xs text-text-muted">{formatVolume(mainTankLitres, units)}</p>
-            </div>
-            <div className="rounded-xl bg-bg-elevated p-3">
-              <p className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.06em] text-text-secondary"><span className="size-2 rounded-full" style={{ backgroundColor: reserveColor }} />Reserve tank</p>
-              <p className="mt-2 font-mono text-[22px] font-bold tabular-nums text-text-primary">{displayedReserveRange === null ? "—" : formatNumber(displayedReserveRange, 0)}<span className="ml-1 text-[13px] font-medium text-text-muted">{units.distanceLabel}</span></p>
-              <p className="mt-1 text-xs text-text-muted">{formatVolume(activeVehicle.reserve, units)}</p>
-            </div>
           </div>
         </article>
 
@@ -294,7 +330,7 @@ export function DashboardScreen() {
             <p className="font-mono text-xl font-bold tabular-nums text-text-primary">{averageFill === null ? "—" : formatVolume(averageFill, units)}</p>
             <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">AVG FILL</p>
           </article>
-          <article className="border-x border-border-default p-4">
+          <article className="border-x border-border-default px-3 py-3">
             <p className="font-mono text-xl font-bold tabular-nums text-text-primary">{vehicleFillUps.length === 0 ? "—" : formatVolume(totalFuel, units)}</p>
             <p className="mt-2 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">TOTAL FUEL</p>
             <p className="mt-1 text-[10px] text-text-muted">{vehicleFillUps.length} fills</p>
