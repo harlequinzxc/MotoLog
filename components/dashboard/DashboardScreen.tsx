@@ -18,6 +18,7 @@ import { GarageScreen } from "@/components/garage/GarageScreen";
 import { useAppContext } from "@/context/AppContext";
 import { calculateRangeBreakdown } from "@/lib/calculations";
 import { APP_NAME, APP_VERSION } from "@/lib/constants";
+import { parseCalendarDate } from "@/lib/date";
 import {
   formatDistance,
   formatEconomy,
@@ -35,7 +36,7 @@ function formatDate(date: string) {
     day: "numeric",
     month: "short",
     year: "numeric",
-  }).format(new Date(`${date}T12:00:00`));
+  }).format(parseCalendarDate(date) ?? new Date(0));
 }
 
 function todayLabel() {

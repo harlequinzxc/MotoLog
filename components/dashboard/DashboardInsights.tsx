@@ -14,6 +14,7 @@ import {
   YAxis,
 } from "recharts";
 
+import { parseCalendarDate } from "@/lib/date";
 import {
   fromKilometres,
   fromKilometresPerLitre,
@@ -37,7 +38,7 @@ interface MonthlySpend {
 }
 
 function toDate(date: string) {
-  return new Date(`${date}T12:00:00`);
+  return parseCalendarDate(date) ?? new Date(0);
 }
 
 function monthKey(date: Date) {

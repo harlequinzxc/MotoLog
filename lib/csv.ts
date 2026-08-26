@@ -1,3 +1,4 @@
+import { toCalendarDate, parseCalendarDate } from "@/lib/date";
 import { createId } from "@/lib/ids";
 import {
   fromKilometres,
@@ -204,8 +205,7 @@ function importSettings(row: Row): AppSettings {
 }
 
 function timestampFromDate(date: string, fallback: string) {
-  const timestamp = new Date(`${date}T12:00:00`);
-  return Number.isNaN(timestamp.getTime()) ? fallback : timestamp.toISOString();
+  return (parseCalendarDate(date) ?? new Date(fallback)).toISOString();
 }
 
 function simpleSettingsRow(settings: AppSettings): Row {
@@ -312,12 +312,13 @@ function importSimpleData(rows: Row[]): AppData {
       return [];
     }
 
-    const createdAt = timestampFromDate(row.date, importedAt);
+    const date = toCalendarDate(row.date, new Date(importedAt));
+    const createdAt = timestampFromDate(date, importedAt);
     return [
       {
         id: createId("fill"),
         vehicleId,
-        date: row.date || importedAt.slice(0, 10),
+        date,
         odometer: Math.max(toKilometres(toNumber(row.odometer), units.distance), 0),
         fuelAdded: Math.max(toLitres(toNumber(row.fuel_added), units.volume), 0),
         totalCost: Math.max(toNumber(row.total_cost), 0),
@@ -380,11 +381,12 @@ function importLegacyData(rows: Row[]): AppData {
       return [];
     }
 
+    const date = toCalendarDate(row.date, new Date(importedAt));
     return [
       {
         id: row.id,
         vehicleId: row.vehicle_id,
-        date: row.date || importedAt.slice(0, 10),
+        date,
         odometer: Math.max(toNumber(row.odometer_km), 0),
         fuelAdded: Math.max(toNumber(row.fuel_added_l), 0),
         totalCost: Math.max(toNumber(row.total_cost), 0),

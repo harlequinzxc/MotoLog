@@ -9,6 +9,7 @@ import { FillUpCard } from "@/components/history/FillUpCard";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAppContext } from "@/context/AppContext";
 import { APP_NAME, APP_VERSION } from "@/lib/constants";
+import { parseCalendarDate } from "@/lib/date";
 import { formatEconomy, resolveUnits } from "@/lib/units";
 import type { FillUp } from "@/lib/types";
 
@@ -17,11 +18,12 @@ type SortOption = "best-economy" | "highest-cost" | "newest" | "oldest";
 type TimePeriod = "30-days" | "90-days" | "all" | "this-year";
 
 function toDate(date: string) {
-  return new Date(`${date}T12:00:00`);
+  return parseCalendarDate(date) ?? new Date(0);
 }
 
 function monthKey(fillUp: FillUp) {
-  return fillUp.date.slice(0, 7);
+  const date = toDate(fillUp.date);
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
 }
 
 function monthLabel(key: string) {

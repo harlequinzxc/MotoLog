@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { recalculateVehicleFillUps } from "@/lib/calculations";
+import { toCalendarDate } from "@/lib/date";
 import { generateDemoData, type DemoData } from "@/lib/demoData";
 import { createId } from "@/lib/ids";
 import {
@@ -93,11 +94,18 @@ function syncCurrentOdometers(
   });
 }
 
+function normalizeFillUpDates(fillUps: FillUp[]) {
+  return fillUps.map((fillUp) => {
+    const date = toCalendarDate(fillUp.date);
+    return date === fillUp.date ? fillUp : { ...fillUp, date };
+  });
+}
+
 function recalculateAllFillUps(vehicles: Vehicle[], fillUps: FillUp[]) {
   return vehicles.reduce(
     (currentFillUps, vehicle) =>
       recalculateVehicleFillUps(vehicle, currentFillUps),
-    fillUps,
+    normalizeFillUpDates(fillUps),
   );
 }
 
@@ -107,7 +115,10 @@ function recalculateOneVehicleFillUps(
   vehicleId: string,
 ) {
   const vehicle = vehicles.find((candidate) => candidate.id === vehicleId);
-  return vehicle ? recalculateVehicleFillUps(vehicle, fillUps) : fillUps;
+  const normalizedFillUps = normalizeFillUpDates(fillUps);
+  return vehicle
+    ? recalculateVehicleFillUps(vehicle, normalizedFillUps)
+    : normalizedFillUps;
 }
 
 function appReducer(state: AppState, action: AppAction): AppState {

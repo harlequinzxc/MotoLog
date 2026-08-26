@@ -1,6 +1,7 @@
 import { ChevronDown, Fuel, Gauge, MapPin, Pencil, Trash2 } from "lucide-react";
 import type { KeyboardEvent } from "react";
 
+import { parseCalendarDate } from "@/lib/date";
 import {
   formatDistance,
   formatEconomy,
@@ -39,7 +40,7 @@ function formatDate(date: string) {
     day: "2-digit",
     month: "short",
     year: "numeric",
-  }).format(new Date(`${date}T12:00:00`));
+  }).format(parseCalendarDate(date) ?? new Date(0));
 }
 
 function EconomyMeter({
