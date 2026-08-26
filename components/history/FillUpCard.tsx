@@ -23,6 +23,7 @@ import type { AppSettings, FillUp, Vehicle } from "@/lib/types";
 interface FillUpCardProps {
   averageEconomy: number | null;
   currencySymbol: string;
+  isBaseline: boolean;
   fillUp: FillUp;
   isExpanded: boolean;
   onDelete: () => void;
@@ -48,14 +49,16 @@ function dateParts(date: string) {
 function EconomyIndicator({
   averageEconomy,
   economy,
+  isBaseline,
   units,
 }: {
   averageEconomy: number | null;
   economy: number | null;
+  isBaseline: boolean;
   units: ResolvedUnits;
 }) {
   if (economy === null) {
-    return <p className="mt-3 rounded-xl bg-bg-elevated px-3 py-2 text-xs text-text-muted">Partial fill — economy will be calculated at the next full tank.</p>;
+    return <p className="mt-3 rounded-xl bg-bg-elevated px-3 py-2 text-xs text-text-muted">{isBaseline ? "First logged fill — economy starts with the next pump." : "Partial fill — economy will be calculated at the next full tank."}</p>;
   }
 
   const aboveAverage = averageEconomy === null || economy >= averageEconomy;
@@ -87,6 +90,7 @@ export function FillUpCard({
   averageEconomy,
   currencySymbol,
   fillUp,
+  isBaseline,
   isExpanded,
   onDelete,
   onEdit,
@@ -136,7 +140,7 @@ export function FillUpCard({
             </div>
           </div>
         </div>
-        <EconomyIndicator averageEconomy={averageEconomy} economy={fillUp.economy} units={units} />
+        <EconomyIndicator averageEconomy={averageEconomy} economy={fillUp.economy} isBaseline={isBaseline} units={units} />
       </div>
 
       {isExpanded ? (

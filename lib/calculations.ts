@@ -102,30 +102,39 @@ export function calculateFillUpMetrics({
       (first, second) =>
         first.odometer - second.odometer || first.date.localeCompare(second.date),
     );
+  // The first recorded pump is a baseline: we do not know the fuel level
+  // before it, so neither its distance nor its fuel should affect economy.
+  if (priorFillUps.length === 0) {
+    return { distance: null, economy: null };
+  }
+
   const previousFillUp = priorFillUps[priorFillUps.length - 1];
-  const previousOdometer = previousFillUp?.odometer ?? vehicle.startingOdometer;
   const distance =
-    Number.isFinite(odometer) && odometer >= previousOdometer
-      ? odometer - previousOdometer
+    Number.isFinite(odometer) && odometer >= previousFillUp.odometer
+      ? odometer - previousFillUp.odometer
       : null;
 
   if (!isFullTank) {
     return { distance, economy: null };
   }
 
+  // Index zero is always the baseline, even when that original log happened
+  // to be marked as a full tank. Do not include its fuel in later math.
   let lastFullFillIndex = -1;
-  for (let index = priorFillUps.length - 1; index >= 0; index -= 1) {
+  for (let index = priorFillUps.length - 1; index >= 1; index -= 1) {
     if (priorFillUps[index].isFullTank) {
       lastFullFillIndex = index;
       break;
     }
   }
+  const baselineFillUp = priorFillUps[0];
   const economyAnchorOdometer =
     lastFullFillIndex === -1
-      ? vehicle.startingOdometer
+      ? baselineFillUp.odometer
       : priorFillUps[lastFullFillIndex].odometer;
+  const firstFuelIndex = lastFullFillIndex === -1 ? 1 : lastFullFillIndex + 1;
   const fuelSinceLastFull = priorFillUps
-    .slice(lastFullFillIndex + 1)
+    .slice(firstFuelIndex)
     .reduce(
       (totalFuel, fillUp) =>
         Number.isFinite(fillUp.fuelAdded) && fillUp.fuelAdded > 0
@@ -162,7 +171,21 @@ export function recalculateVehicleFillUps(
   let lastFullOdometer: number | null = null;
   let fuelSinceLastFull = 0;
 
-  ordered.forEach((fillUp) => {
+  ordered.forEach((fillUp, index) => {
+    // The earliest log establishes a trustworthy odometer/fuel baseline only.
+    // It is never itself used as a trip or economy calculation.
+    if (index === 0) {
+      recalculated.set(fillUp.id, {
+        ...fillUp,
+        distance: null,
+        economy: null,
+      });
+      previousOdometer = fillUp.odometer;
+      lastFullOdometer = fillUp.odometer;
+      fuelSinceLastFull = 0;
+      return;
+    }
+
     const distance =
       Number.isFinite(fillUp.odometer) && fillUp.odometer >= previousOdometer
         ? fillUp.odometer - previousOdometer
@@ -174,9 +197,8 @@ export function recalculateVehicleFillUps(
     let economy: number | null = null;
 
     if (fillUp.isFullTank) {
-      const anchorOdometer = lastFullOdometer ?? vehicle.startingOdometer;
       economy = calculateEconomy(
-        fillUp.odometer - anchorOdometer,
+        fillUp.odometer - (lastFullOdometer ?? previousOdometer),
         fuelSinceLastFull + validFuel,
       );
       lastFullOdometer = fillUp.odometer;

@@ -100,6 +100,22 @@ export function HistoryScreen() {
     [vehicles],
   );
   const globalUnits = resolveUnits(settings);
+  const baselineFillUpIds = useMemo(() => {
+    const firstByVehicle = new Map<string, FillUp>();
+
+    fillUps.forEach((fillUp) => {
+      const current = firstByVehicle.get(fillUp.vehicleId);
+      if (
+        !current ||
+        fillUp.date.localeCompare(current.date) < 0 ||
+        (fillUp.date === current.date && fillUp.odometer < current.odometer)
+      ) {
+        firstByVehicle.set(fillUp.vehicleId, fillUp);
+      }
+    });
+
+    return new Set([...firstByVehicle.values()].map((fillUp) => fillUp.id));
+  }, [fillUps]);
   const filteredFillUps = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
 
@@ -286,6 +302,7 @@ export function HistoryScreen() {
                       averageEconomy={averageEconomy}
                       currencySymbol={settings.currencySymbol}
                       fillUp={fillUp}
+                      isBaseline={baselineFillUpIds.has(fillUp.id)}
                       isExpanded={expandedFillUpId === fillUp.id}
                       key={fillUp.id}
                       onDelete={() => setFillUpPendingDelete(fillUp)}

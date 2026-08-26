@@ -79,8 +79,10 @@ export function generateDemoData(referenceDate = new Date()): DemoData {
           : index === 10
             ? "Weekend highway run."
             : "",
-      distance,
-      economy: isFullTank ? calculateEconomy(distance, fuelAdded) : null,
+      // The first log is a baseline and intentionally has no calculated trip.
+      distance: index === 0 ? null : distance,
+      economy:
+        index === 0 || !isFullTank ? null : calculateEconomy(distance, fuelAdded),
       createdAt: fillDate.toISOString(),
       updatedAt: fillDate.toISOString(),
     };
