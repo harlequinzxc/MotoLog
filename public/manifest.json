@@ -1,0 +1,24 @@
+{
+  "name": "MotoLog",
+  "short_name": "MotoLog",
+  "description": "A focused fuel and ride log for every vehicle in your garage.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0D0D0E",
+  "theme_color": "#FF5502",
+  "icons": [
+    {
+      "src": "/icons/motolog-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/motolog-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
