@@ -7,6 +7,7 @@ import {
   Palette,
   ReceiptText,
   SlidersHorizontal,
+  Sparkles,
 } from "lucide-react";
 import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
 
@@ -14,7 +15,11 @@ import { MotoMark } from "@/components/branding/MotoMark";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAppContext } from "@/context/AppContext";
 import { APP_NAME, APP_VERSION } from "@/lib/constants";
-import { exportAppDataToCsv, importAppDataFromCsv } from "@/lib/csv";
+import {
+  exportAppDataToCsv,
+  exportDemoDataToCsv,
+  importAppDataFromCsv,
+} from "@/lib/csv";
 import { type AccentTheme, useTheme } from "@/lib/theme";
 import type { ConsumptionUnit } from "@/lib/types";
 
@@ -112,22 +117,39 @@ export function SettingsScreen() {
     });
   };
 
-  const exportBackup = () => {
-    const csv = exportAppDataToCsv({
-      vehicles,
-      fillUps,
-      settings: { ...settings, accentTheme },
-    });
+  const downloadCsv = (csv: string, filename: string) => {
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `motolog-backup-${new Date().toISOString().slice(0, 10)}.csv`;
+    anchor.download = filename;
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
     URL.revokeObjectURL(url);
+  };
+
+  const exportBackup = () => {
+    downloadCsv(
+      exportAppDataToCsv({
+        vehicles,
+        fillUps,
+        settings: { ...settings, accentTheme },
+      }),
+      `motolog-backup-${new Date().toISOString().slice(0, 10)}.csv`,
+    );
     setNotice({ kind: "success", text: "CSV backup downloaded." });
+  };
+
+  const exportDemoTemplate = () => {
+    downloadCsv(
+      exportDemoDataToCsv({ ...settings, accentTheme }),
+      "motolog-demo-template.csv",
+    );
+    setNotice({
+      kind: "success",
+      text: "Demo CSV downloaded. Edit it in a spreadsheet, then import it here.",
+    });
   };
 
   const importBackup = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -361,7 +383,7 @@ export function SettingsScreen() {
 
         <SettingsSection title="BACKUP & RESTORE">
           <p className="text-sm leading-6 text-text-secondary">
-            Export a portable CSV containing settings, vehicles, and fill-ups — or replace this device with a previous backup.
+            CSVs use simple settings, vehicle, and fill-up rows — no internal IDs or timestamps. Edit a template in any spreadsheet, then import it to replace this device.
           </p>
           <div className="mt-5 grid grid-cols-2 gap-3">
             <button
@@ -380,6 +402,14 @@ export function SettingsScreen() {
               <FileUp aria-hidden="true" size={17} className="text-accent" />
               Import CSV
             </button>
+            <button
+              className="col-span-2 flex h-12 items-center justify-center gap-2 rounded-2xl border border-accent/25 bg-accent/10 px-3 text-sm font-bold text-text-primary transition-colors hover:bg-accent/15"
+              onClick={exportDemoTemplate}
+              type="button"
+            >
+              <Sparkles aria-hidden="true" size={17} className="text-accent" />
+              Download demo CSV template
+            </button>
             <input
               accept=".csv,text/csv"
               className="sr-only"
@@ -388,6 +418,9 @@ export function SettingsScreen() {
               type="file"
             />
           </div>
+          <p className="mt-4 text-xs leading-5 text-text-muted">
+            Tip: edit the settings row first. Its currency and units determine how the remaining values are read on import.
+          </p>
         </SettingsSection>
 
         <section className="rounded-3xl border border-red-500/20 bg-red-500/5 p-5">
