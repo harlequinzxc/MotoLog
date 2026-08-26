@@ -12,10 +12,12 @@ import {
 import { useState, type FormEvent } from "react";
 
 import { MotoMark } from "@/components/branding/MotoMark";
+import { VehicleCard } from "@/components/garage/VehicleCard";
 import { BottomSheet } from "@/components/ui/BottomSheet";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAppContext } from "@/context/AppContext";
 import { APP_NAME, APP_VERSION } from "@/lib/constants";
-import type { UnitPreference, VehicleType } from "@/lib/types";
+import type { UnitPreference, Vehicle, VehicleType } from "@/lib/types";
 
 type UnitPreferenceChoice = "metric" | "imperial";
 
@@ -68,24 +70,79 @@ function toStoredDistance(value: number, isImperial: boolean) {
   return isImperial ? value * MILE_IN_KILOMETRES : value;
 }
 
+function fromStoredVolume(value: number, isImperial: boolean) {
+  return isImperial ? value / IMPERIAL_GALLON_IN_LITRES : value;
+}
+
+function fromStoredDistance(value: number, isImperial: boolean) {
+  return isImperial ? value / MILE_IN_KILOMETRES : value;
+}
+
+function formatFormNumber(value: number) {
+  return Number(value.toFixed(2)).toString();
+}
+
+function getVehicleUnitChoice(vehicle: Vehicle): UnitPreferenceChoice {
+  return vehicle.unitPreference?.distance === "mi" ? "imperial" : "metric";
+}
+
 /**
  * The Garage destination owns the add-vehicle sheet and is deliberately shared
  * with the empty dashboard, so the first-run experience is identical anywhere.
  */
 export function GarageScreen() {
-  const { addVehicle, isHydrated, loadDemoData, vehicles } = useAppContext();
+  const {
+    addVehicle,
+    deleteVehicle,
+    getVehicleFillUps,
+    isHydrated,
+    loadDemoData,
+    setActiveVehicle,
+    updateVehicle,
+    vehicles,
+  } = useAppContext();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [editingVehicleId, setEditingVehicleId] = useState<string | null>(null);
+  const [vehiclePendingDelete, setVehiclePendingDelete] = useState<Vehicle | null>(
+    null,
+  );
   const [form, setForm] = useState<VehicleFormState>(createEmptyForm);
   const [errors, setErrors] = useState<FormErrors>({});
 
-  const openVehicleSheet = () => {
-    setForm(createEmptyForm());
+  const editingVehicle =
+    vehicles.find((vehicle) => vehicle.id === editingVehicleId) ?? null;
+
+  const openVehicleSheet = (vehicle?: Vehicle) => {
+    if (vehicle) {
+      const unitPreference = getVehicleUnitChoice(vehicle);
+      const isImperial = unitPreference === "imperial";
+
+      setForm({
+        type: vehicle.type,
+        name: vehicle.name,
+        year: vehicle.year?.toString() ?? "",
+        tankCapacity: formatFormNumber(
+          fromStoredVolume(vehicle.tankCapacity, isImperial),
+        ),
+        reserve: formatFormNumber(fromStoredVolume(vehicle.reserve, isImperial)),
+        startingOdometer: formatFormNumber(
+          fromStoredDistance(vehicle.startingOdometer, isImperial),
+        ),
+        unitPreference,
+      });
+      setEditingVehicleId(vehicle.id);
+    } else {
+      setForm(createEmptyForm());
+      setEditingVehicleId(null);
+    }
+
     setErrors({});
     setIsSheetOpen(true);
   };
 
   const closeVehicleSheet = () => {
     setIsSheetOpen(false);
+    setEditingVehicleId(null);
     setErrors({});
   };
 
@@ -114,7 +171,7 @@ export function GarageScreen() {
 
     const isImperial = form.unitPreference === "imperial";
     const parsedYear = numberOrDefault(form.year, Number.NaN);
-    addVehicle({
+    const vehicleValues = {
       type: form.type,
       name: form.name,
       year: Number.isFinite(parsedYear) ? parsedYear : null,
@@ -129,8 +186,14 @@ export function GarageScreen() {
         0,
       ),
       unitPreference: getUnitPreference(form.unitPreference),
-      isActive: vehicles.length === 0,
-    });
+    };
+
+    if (editingVehicle) {
+      updateVehicle(editingVehicle.id, vehicleValues);
+    } else {
+      addVehicle({ ...vehicleValues, isActive: vehicles.length === 0 });
+    }
+
     closeVehicleSheet();
   };
 
@@ -145,7 +208,24 @@ export function GarageScreen() {
     }
   };
 
+  const confirmVehicleDelete = () => {
+    if (!vehiclePendingDelete) {
+      return;
+    }
+
+    deleteVehicle(vehiclePendingDelete.id);
+    setVehiclePendingDelete(null);
+  };
+
+  const sortedVehicles = [...vehicles].sort(
+    (first, second) =>
+      Number(second.isActive) - Number(first.isActive) ||
+      first.createdAt.localeCompare(second.createdAt),
+  );
   const vehicleCount = vehicles.length;
+  const pendingFillUpCount = vehiclePendingDelete
+    ? getVehicleFillUps(vehiclePendingDelete.id).length
+    : 0;
   const isMotorcycle = form.type === "motorcycle";
   const NameIcon = isMotorcycle ? Bike : CarFront;
   const fuelUnit = form.unitPreference === "metric" ? "litres" : "gallons";
@@ -178,15 +258,15 @@ export function GarageScreen() {
         </span>
       </header>
 
-      <div className="flex flex-1 flex-col justify-center py-10">
+      <div className="flex flex-1 flex-col py-10">
         {!isHydrated ? (
-          <div className="rounded-3xl border border-border-default bg-bg-card p-6 text-center">
+          <div className="my-auto rounded-3xl border border-border-default bg-bg-card p-6 text-center">
             <div className="mx-auto h-16 w-16 animate-pulse rounded-3xl bg-bg-input" />
             <div className="mx-auto mt-6 h-5 w-40 animate-pulse rounded bg-bg-input" />
             <div className="mx-auto mt-3 h-4 w-56 animate-pulse rounded bg-bg-input" />
           </div>
         ) : vehicleCount === 0 ? (
-          <article className="rounded-3xl border border-border-default bg-bg-card p-6 text-center shadow-[0_18px_48px_rgb(0_0_0_/_0.18)]">
+          <article className="my-auto rounded-3xl border border-border-default bg-bg-card p-6 text-center shadow-[0_18px_48px_rgb(0_0_0_/_0.18)]">
             <span className="mx-auto grid size-16 place-items-center rounded-3xl border border-accent/20 bg-accent/10 text-accent shadow-accent-glow">
               <Bike aria-hidden="true" size={30} strokeWidth={2} />
             </span>
@@ -202,7 +282,7 @@ export function GarageScreen() {
             <div className="mt-8 grid gap-3">
               <button
                 className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-accent px-4 text-sm font-bold text-text-primary shadow-accent-glow transition-transform hover:brightness-110 active:scale-[0.98]"
-                onClick={openVehicleSheet}
+                onClick={() => openVehicleSheet()}
                 type="button"
               >
                 <Plus aria-hidden="true" size={18} strokeWidth={2.7} />
@@ -222,29 +302,40 @@ export function GarageScreen() {
             </p>
           </article>
         ) : (
-          <article className="rounded-3xl border border-border-default bg-bg-card p-6 text-center shadow-[0_18px_48px_rgb(0_0_0_/_0.18)]">
-            <span className="mx-auto grid size-16 place-items-center rounded-3xl border border-accent/20 bg-accent/10 text-accent shadow-accent-glow">
-              <Fuel aria-hidden="true" size={28} strokeWidth={2} />
-            </span>
-            <p className="mt-7 text-xs font-bold tracking-[0.18em] text-accent">
-              GARAGE READY
-            </p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-text-primary">
-              {vehicleCount} {vehicleCount === 1 ? "vehicle" : "vehicles"} saved
-            </h1>
-            <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-text-secondary">
-              Your vehicle is safely stored on this device. Full garage cards
-              arrive in the next update.
-            </p>
-            <button
-              className="mt-8 flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-border-default bg-bg-input px-4 text-sm font-semibold text-text-primary transition-colors hover:border-accent/40 hover:bg-bg-card"
-              onClick={openVehicleSheet}
-              type="button"
-            >
-              <Plus aria-hidden="true" size={18} className="text-accent" />
-              Add another vehicle
-            </button>
-          </article>
+          <div className="grid gap-4">
+            <div className="flex items-end justify-between gap-4 px-1">
+              <div>
+                <p className="text-[11px] font-bold tracking-[0.15em] text-accent">
+                  YOUR GARAGE
+                </p>
+                <h1 className="mt-1 text-2xl font-bold tracking-tight text-text-primary">
+                  {vehicleCount} {vehicleCount === 1 ? "vehicle" : "vehicles"}
+                </h1>
+              </div>
+              <button
+                aria-label="Add a vehicle"
+                className="flex h-10 items-center gap-1.5 rounded-xl bg-accent px-3 text-xs font-bold text-text-primary shadow-accent-glow transition-transform hover:brightness-110 active:scale-[0.98]"
+                onClick={() => openVehicleSheet()}
+                type="button"
+              >
+                <Plus aria-hidden="true" size={16} strokeWidth={2.7} />
+                Add
+              </button>
+            </div>
+
+            <div className="grid gap-3">
+              {sortedVehicles.map((vehicle) => (
+                <VehicleCard
+                  fillUps={getVehicleFillUps(vehicle.id)}
+                  key={vehicle.id}
+                  onDelete={() => setVehiclePendingDelete(vehicle)}
+                  onEdit={() => openVehicleSheet(vehicle)}
+                  onSetActive={() => setActiveVehicle(vehicle.id)}
+                  vehicle={vehicle}
+                />
+              ))}
+            </div>
+          </div>
         )}
       </div>
 
@@ -255,7 +346,7 @@ export function GarageScreen() {
       <BottomSheet
         isOpen={isSheetOpen}
         onClose={closeVehicleSheet}
-        title="Add a vehicle"
+        title={editingVehicle ? "Edit vehicle" : "Add a vehicle"}
       >
         <form className="pb-2" noValidate onSubmit={handleSubmit}>
           <fieldset>
@@ -472,11 +563,24 @@ export function GarageScreen() {
               className="h-[3.25rem] w-full rounded-2xl bg-accent px-4 text-sm font-bold text-text-primary shadow-accent-glow transition-transform hover:brightness-110 active:scale-[0.98]"
               type="submit"
             >
-              Add to garage
+              {editingVehicle ? "Save changes" : "Add to garage"}
             </button>
           </div>
         </form>
       </BottomSheet>
+
+      <ConfirmDialog
+        confirmLabel="Delete vehicle"
+        description={
+          vehiclePendingDelete
+            ? `This removes ${vehiclePendingDelete.name} and ${pendingFillUpCount} associated ${pendingFillUpCount === 1 ? "fill-up" : "fill-ups"} from this device. This cannot be undone.`
+            : ""
+        }
+        isOpen={Boolean(vehiclePendingDelete)}
+        onCancel={() => setVehiclePendingDelete(null)}
+        onConfirm={confirmVehicleDelete}
+        title="Delete vehicle?"
+      />
     </section>
   );
 }
