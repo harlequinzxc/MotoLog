@@ -13,6 +13,7 @@ import {
 import { useMemo } from "react";
 
 import { MotoMark } from "@/components/branding/MotoMark";
+import { DashboardInsights } from "@/components/dashboard/DashboardInsights";
 import { GarageScreen } from "@/components/garage/GarageScreen";
 import { useAppContext } from "@/context/AppContext";
 import { calculateRangeBreakdown } from "@/lib/calculations";
@@ -63,8 +64,14 @@ function trendInsight(economies: number[]) {
 
 /** The core metrics dashboard for the active vehicle. */
 export function DashboardScreen() {
-  const { activeVehicle, getVehicleFillUps, isHydrated, setActiveVehicle, vehicles } =
-    useAppContext();
+  const {
+    activeVehicle,
+    getVehicleFillUps,
+    isHydrated,
+    setActiveVehicle,
+    settings,
+    vehicles,
+  } = useAppContext();
   const vehicleFillUps = useMemo(
     () => (activeVehicle ? getVehicleFillUps(activeVehicle.id) : []),
     [activeVehicle, getVehicleFillUps],
@@ -292,6 +299,11 @@ export function DashboardScreen() {
             </div>
           </div>
         </section>
+
+        <DashboardInsights
+          currencySymbol={settings.currencySymbol}
+          fillUps={vehicleFillUps}
+        />
       </div>
     </section>
   );
