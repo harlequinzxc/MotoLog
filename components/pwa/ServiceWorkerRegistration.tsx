@@ -10,7 +10,10 @@ export function ServiceWorkerRegistration() {
     }
 
     const registerServiceWorker = () => {
-      void navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => {
+      void navigator.serviceWorker.register("/sw.js", {
+        scope: "/",
+        updateViaCache: "none",
+      }).catch(() => {
         // Installation remains optional: the regular web experience still works
         // if a browser or a local development environment blocks workers.
       });

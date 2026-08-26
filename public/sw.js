@@ -1,5 +1,5 @@
-/* MotoLog's intentionally small app-shell service worker. */
-const CACHE_NAME = "motolog-shell-v3";
+/* MotoLog's compact, update-safe app-shell service worker. */
+const CACHE_NAME = "motolog-shell-v4";
 const APP_SHELL = [
   "/",
   "/manifest.json",
@@ -32,6 +32,16 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+function offlineResponse() {
+  return new Response(
+    "<!doctype html><title>MotoLog is offline</title><main><h1>MotoLog is offline</h1><p>Reconnect and reload to continue.</p></main>",
+    {
+      status: 503,
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    },
+  );
+}
+
 self.addEventListener("fetch", (event) => {
   const { request } = event;
   const url = new URL(request.url);
@@ -40,37 +50,41 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Use the cached shell if a navigation is attempted without a connection.
+  // Always prefer the latest deployed document; the shell remains an offline fallback.
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request).catch(async () => {
-        return (await caches.match(request)) || (await caches.match("/"));
+        return (
+          (await caches.match(request)) ||
+          (await caches.match("/")) ||
+          offlineResponse()
+        );
       }),
     );
     return;
   }
 
-  // Keep the assets that make up the application shell available offline.
+  // Next.js assets are content-hashed, but network-first avoids a stale cached
+  // bundle trapping an installed app after a deployment. Cached assets remain a
+  // safe fallback when temporarily offline.
   if (
     url.pathname.startsWith("/_next/static/") ||
     request.destination === "image"
   ) {
     event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
-        return fetch(request).then((response) => {
+      fetch(request)
+        .then((response) => {
           if (response.ok) {
             const responseCopy = response.clone();
-            void caches.open(CACHE_NAME).then((cache) => {
-              void cache.put(request, responseCopy);
-            });
+            event.waitUntil(
+              caches
+                .open(CACHE_NAME)
+                .then((cache) => cache.put(request, responseCopy)),
+            );
           }
           return response;
-        });
-      }),
+        })
+        .catch(async () => (await caches.match(request)) || Response.error()),
     );
   }
 });
