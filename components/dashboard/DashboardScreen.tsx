@@ -93,7 +93,9 @@ export function DashboardScreen() {
     activeVehicle,
     getVehicleFillUps,
     isHydrated,
+    selectedVehicleId,
     setActiveVehicle,
+    setSelectedVehicleId,
     settings,
     vehicles,
   } = useAppContext();
@@ -220,6 +222,23 @@ export function DashboardScreen() {
 
         {isVehicleMenuOpen && vehicles.length > 1 ? (
           <div className="absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-2xl border border-border-default bg-bg-card/95 p-2 shadow-2xl backdrop-blur-xl">
+            <button
+              className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left ${selectedVehicleId === "all" ? "bg-accent/10" : "hover:bg-bg-elevated"}`}
+              onClick={() => {
+                setSelectedVehicleId("all");
+                setIsVehicleMenuOpen(false);
+              }}
+              type="button"
+            >
+              <span className="grid size-9 place-items-center rounded-xl bg-bg-elevated text-text-secondary">
+                <Bike aria-hidden="true" size={18} />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-bold text-text-primary">All Vehicles</span>
+                <span className="mt-0.5 block text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">Combined history</span>
+              </span>
+              {selectedVehicleId === "all" ? <Check aria-hidden="true" size={17} className="text-accent" strokeWidth={3} /> : null}
+            </button>
             {vehicles.map((vehicle) => {
               const OptionIcon = vehicle.type === "motorcycle" ? Bike : CarFront;
               const optionUnits = resolveUnits(settings, vehicle);

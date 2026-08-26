@@ -10,6 +10,7 @@ export const STORAGE_KEYS = {
   vehicles: "motolog:vehicles",
   fillUps: "motolog:fill-ups",
   settings: "motolog:settings",
+  selectedVehicleId: "motolog:selected-vehicle-id",
 } as const;
 
 function hasLocalStorage() {
@@ -99,6 +100,17 @@ export function getSettings(): AppSettings {
 
 export function setSettings(settings: AppSettings) {
   writeValue(STORAGE_KEYS.settings, settings);
+}
+
+export function getSelectedVehicleId() {
+  const selectedVehicleId = readValue<unknown>(STORAGE_KEYS.selectedVehicleId, null);
+  return selectedVehicleId === "all" || typeof selectedVehicleId === "string"
+    ? selectedVehicleId
+    : null;
+}
+
+export function setSelectedVehicleId(selectedVehicleId: string | "all" | null) {
+  writeValue(STORAGE_KEYS.selectedVehicleId, selectedVehicleId);
 }
 
 export function getAppData(): AppData {

@@ -17,7 +17,9 @@ import { createId } from "@/lib/ids";
 import {
   clearAppData,
   getAppData,
+  getSelectedVehicleId,
   setAppData,
+  setSelectedVehicleId as persistSelectedVehicleId,
   STORAGE_KEYS,
 } from "@/lib/storage";
 import {
@@ -30,8 +32,11 @@ import {
   type VehicleInput,
 } from "@/lib/types";
 
+export type SelectedVehicleId = string | "all" | null;
+
 interface AppState extends AppData {
   isHydrated: boolean;
+  selectedVehicleId: SelectedVehicleId;
 }
 
 type VehicleChanges = Partial<
@@ -40,11 +45,12 @@ type VehicleChanges = Partial<
 type FillUpChanges = Partial<Omit<FillUpInput, "vehicleId">>;
 
 type AppAction =
-  | { type: "hydrate"; data: AppData }
+  | { type: "hydrate"; data: AppData; selectedVehicleId: SelectedVehicleId }
   | { type: "addVehicle"; vehicle: Vehicle }
   | { type: "updateVehicle"; id: string; changes: VehicleChanges; updatedAt: string }
   | { type: "deleteVehicle"; id: string; updatedAt: string }
   | { type: "setActiveVehicle"; id: string; updatedAt: string }
+  | { type: "setSelectedVehicle"; selectedVehicleId: SelectedVehicleId }
   | { type: "addFillUp"; fillUp: FillUp; updatedAt: string }
   | { type: "updateFillUp"; id: string; changes: FillUpChanges; updatedAt: string }
   | { type: "deleteFillUp"; id: string; updatedAt: string }
@@ -57,6 +63,7 @@ const initialState: AppState = {
   vehicles: [],
   fillUps: [],
   settings: { ...DEFAULT_APP_SETTINGS },
+  selectedVehicleId: null,
   isHydrated: false,
 };
 
@@ -68,6 +75,24 @@ function chooseOneActive(vehicles: Vehicle[], preferredId?: string) {
       ? vehicle
       : { ...vehicle, isActive: vehicle.id === activeId },
   );
+}
+
+function normalizeSelectedVehicleId(
+  vehicles: Vehicle[],
+  selectedVehicleId: SelectedVehicleId,
+) {
+  if (selectedVehicleId === "all" && vehicles.length > 1) {
+    return "all";
+  }
+
+  if (
+    typeof selectedVehicleId === "string" &&
+    vehicles.some((vehicle) => vehicle.id === selectedVehicleId)
+  ) {
+    return selectedVehicleId;
+  }
+
+  return vehicles.find((vehicle) => vehicle.isActive)?.id ?? vehicles[0]?.id ?? null;
 }
 
 function syncCurrentOdometers(
@@ -131,6 +156,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...action.data,
         vehicles: syncCurrentOdometers(vehicles, fillUps),
         fillUps,
+        selectedVehicleId: normalizeSelectedVehicleId(
+          vehicles,
+          action.selectedVehicleId,
+        ),
         isHydrated: true,
       };
     }
@@ -147,6 +176,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         vehicles: [...existingVehicles, { ...action.vehicle, isActive: shouldBeActive }],
+        selectedVehicleId:
+          state.selectedVehicleId ?? (shouldBeActive ? action.vehicle.id : null),
       };
     }
 
@@ -197,6 +228,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         vehicles,
         fillUps: state.fillUps.filter((fillUp) => fillUp.vehicleId !== action.id),
+        selectedVehicleId: normalizeSelectedVehicleId(
+          vehicles,
+          state.selectedVehicleId === action.id ? null : state.selectedVehicleId,
+        ),
       };
     }
 
@@ -207,6 +242,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
       return {
         ...state,
+        selectedVehicleId: action.id,
         vehicles: state.vehicles.map((vehicle) => {
           const isActive = vehicle.id === action.id;
           return vehicle.isActive === isActive
@@ -215,6 +251,15 @@ function appReducer(state: AppState, action: AppAction): AppState {
         }),
       };
     }
+
+    case "setSelectedVehicle":
+      return {
+        ...state,
+        selectedVehicleId: normalizeSelectedVehicleId(
+          state.vehicles,
+          action.selectedVehicleId,
+        ),
+      };
 
     case "addFillUp": {
       const fillUps = recalculateOneVehicleFillUps(
@@ -292,6 +337,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...action.data,
         vehicles: syncCurrentOdometers(vehicles, fillUps),
         fillUps,
+        selectedVehicleId: normalizeSelectedVehicleId(vehicles, null),
         isHydrated: true,
       };
     }
@@ -314,6 +360,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         ...state,
         vehicles: syncCurrentOdometers(vehicles, fillUps, action.updatedAt),
         fillUps,
+        selectedVehicleId: state.selectedVehicleId ?? demoVehicle.id,
       };
     }
 
@@ -322,6 +369,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         vehicles: [],
         fillUps: [],
         settings: { ...DEFAULT_APP_SETTINGS },
+        selectedVehicleId: null,
         isHydrated: true,
       };
 
@@ -336,6 +384,7 @@ interface AppContextValue extends AppState {
   updateVehicle: (id: string, changes: VehicleChanges) => void;
   deleteVehicle: (id: string) => void;
   setActiveVehicle: (id: string) => void;
+  setSelectedVehicleId: (selectedVehicleId: SelectedVehicleId) => void;
   addFillUp: (input: FillUpInput) => FillUp;
   updateFillUp: (id: string, changes: FillUpChanges) => void;
   deleteFillUp: (id: string) => void;
@@ -366,7 +415,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // Schedule hydration after the initial client render to keep SSR deterministic.
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      dispatch({ type: "hydrate", data: getAppData() });
+      dispatch({
+        type: "hydrate",
+        data: getAppData(),
+        selectedVehicleId: getSelectedVehicleId(),
+      });
     });
 
     return () => window.cancelAnimationFrame(frame);
@@ -377,7 +430,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const storageKeys = new Set<string>(Object.values(STORAGE_KEYS));
     const handleStorage = (event: StorageEvent) => {
       if (event.key === null || storageKeys.has(event.key)) {
-        dispatch({ type: "hydrate", data: getAppData() });
+        dispatch({
+          type: "hydrate",
+          data: getAppData(),
+          selectedVehicleId: getSelectedVehicleId(),
+        });
       }
     };
 
@@ -395,7 +452,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
       fillUps: state.fillUps,
       settings: state.settings,
     });
-  }, [state.fillUps, state.isHydrated, state.settings, state.vehicles]);
+    persistSelectedVehicleId(state.selectedVehicleId);
+  }, [
+    state.fillUps,
+    state.isHydrated,
+    state.selectedVehicleId,
+    state.settings,
+    state.vehicles,
+  ]);
 
   const addVehicle = useCallback((input: VehicleInput) => {
     const now = currentTimestamp();
@@ -439,6 +503,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const setActiveVehicle = useCallback((id: string) => {
     dispatch({ type: "setActiveVehicle", id, updatedAt: currentTimestamp() });
   }, []);
+
+  const setSelectedVehicleId = useCallback(
+    (selectedVehicleId: SelectedVehicleId) => {
+      dispatch({ type: "setSelectedVehicle", selectedVehicleId });
+    },
+    [],
+  );
 
   const addFillUp = useCallback((input: FillUpInput) => {
     const now = currentTimestamp();
@@ -519,6 +590,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       updateVehicle,
       deleteVehicle,
       setActiveVehicle,
+      setSelectedVehicleId,
       addFillUp,
       updateFillUp,
       deleteFillUp,
@@ -539,6 +611,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       loadDemoData,
       replaceData,
       setActiveVehicle,
+      setSelectedVehicleId,
       state,
       updateFillUp,
       updateSettings,
