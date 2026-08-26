@@ -11,8 +11,8 @@ const config: Config = {
     extend: {
       colors: {
         "bg-base": "#0D0D0E",
-        "bg-card": "#1A1A1E",
-        "bg-elevated": "#222228",
+        "bg-card": "#1E1E20",
+        "bg-elevated": "#2A2A2C",
         "bg-input": "#25252B",
         success: "#84CC16",
         danger: "#EF4444",

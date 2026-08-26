@@ -1,5 +1,9 @@
 import type { Metadata, Viewport } from "next";
 
+import "@fontsource/nunito/400.css";
+import "@fontsource/nunito/500.css";
+import "@fontsource/nunito/600.css";
+
 import { AppProvider } from "@/context/AppContext";
 import { BottomNav } from "@/components/navigation/BottomNav";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";

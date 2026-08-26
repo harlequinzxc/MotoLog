@@ -291,8 +291,8 @@ export function DashboardScreen() {
           </div>
 
           {trend && economies.length >= 6 ? (
-            <div className={`mt-4 flex gap-3 rounded-xl p-3.5 ${trend.isImprovement ? "bg-success/10" : "bg-danger/10"}`}>
-              <span className={`grid size-8 shrink-0 place-items-center rounded-full ${trend.isImprovement ? "bg-success/15 text-success" : "bg-danger/15 text-danger"}`}>
+            <div className="mt-4 flex gap-3 rounded-xl bg-bg-elevated p-3.5">
+              <span className={`grid size-8 shrink-0 place-items-center rounded-full ${trend.isImprovement ? "bg-success/15 text-success" : "bg-danger/10 text-danger"}`}>
                 {trend.isImprovement ? <TrendingUp aria-hidden="true" size={16} /> : <TrendingDown aria-hidden="true" size={16} />}
               </span>
               <div>
