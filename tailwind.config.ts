@@ -12,7 +12,11 @@ const config: Config = {
       colors: {
         "bg-base": "#0D0D0E",
         "bg-card": "#1A1A1E",
+        "bg-elevated": "#222228",
         "bg-input": "#25252B",
+        success: "#84CC16",
+        danger: "#EF4444",
+        reserve: "#EAB308",
         accent: "rgb(var(--color-accent) / <alpha-value>)",
         "text-primary": "#F5F5F5",
         "text-secondary": "#A0A0A8",

@@ -1,14 +1,12 @@
 "use client";
 
-import { History, Search, SlidersHorizontal } from "lucide-react";
+import { ChevronDown, History, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { MotoMark } from "@/components/branding/MotoMark";
 import { LogFillUpSheet } from "@/components/fillups/LogFillUpSheet";
 import { FillUpCard } from "@/components/history/FillUpCard";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAppContext } from "@/context/AppContext";
-import { APP_NAME, APP_VERSION } from "@/lib/constants";
 import { parseCalendarDate } from "@/lib/date";
 import { formatEconomy, resolveUnits } from "@/lib/units";
 import type { FillUp } from "@/lib/types";
@@ -164,100 +162,84 @@ export function HistoryScreen() {
   };
 
   return (
-    <section className="mx-auto min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] w-full max-w-lg pb-8">
-      <div className="sticky top-0 z-30 border-b border-border-default bg-bg-base/95 px-5 pb-4 pt-[max(1.5rem,env(safe-area-inset-top))] backdrop-blur-lg">
-        <header className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <MotoMark size={31} />
-            <span className="text-sm font-bold tracking-tight text-text-primary">
-              {APP_NAME}
-            </span>
-          </div>
-          <span className="rounded-full border border-border-default bg-bg-card px-3 py-1 text-xs font-medium text-text-secondary">
-            {APP_VERSION}
-          </span>
+    <section className="mx-auto min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] w-full max-w-[480px] pb-8">
+      <div className="sticky top-0 z-30 border-b border-border-default bg-bg-base/90 px-5 pb-5 pt-[max(1.5rem,env(safe-area-inset-top))] backdrop-blur-xl">
+        <header>
+          <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">EVERY DROP, ACCOUNTED</p>
+          <h1 className="mt-1 text-3xl font-bold tracking-tight text-text-primary">
+            History <span className="align-baseline text-lg font-medium text-text-muted">{fillUps.length}</span>
+          </h1>
         </header>
 
-        <div className="mt-5 flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-bold tracking-[0.15em] text-accent">
-              HISTORY
-            </p>
-            <h1 className="mt-1 text-2xl font-bold tracking-tight text-text-primary">
-              Fill-ups
-            </h1>
-          </div>
-          <span className="flex items-center gap-1.5 text-xs font-medium text-text-muted">
-            <SlidersHorizontal aria-hidden="true" size={14} className="text-accent" />
-            {filteredFillUps.length} shown
-          </span>
-        </div>
-
-        <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-2xl border border-border-default bg-bg-card">
+        <div className="mt-5 grid grid-cols-3 gap-3">
           {[
-            ["AVG", averageEconomy],
-            ["BEST", bestEconomy],
-            ["WORST", worstEconomy],
-          ].map(([label, value]) => (
-            <div className="px-3 py-3 text-center" key={label as string}>
-              <p className="text-[9px] font-bold tracking-[0.12em] text-text-muted">
-                {label}
+            ["AVG", averageEconomy, "text-text-primary"],
+            ["BEST", bestEconomy, "text-success"],
+            ["WORST", worstEconomy, "text-accent"],
+          ].map(([label, value, color]) => (
+            <div className="rounded-xl bg-bg-card px-3 py-3" key={label as string}>
+              <p className={`font-mono text-[22px] font-bold tabular-nums ${color}`}>
+                {value === null ? "—" : formatEconomy(value as number, globalUnits).split(" ")[0]}
               </p>
-              <p className="mt-1 text-xs font-bold font-mono tabular-nums text-text-primary">
-                {formatEconomy(value as number | null, globalUnits)}
+              <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">
+                {label} {globalUnits.economyLabel}
               </p>
             </div>
           ))}
         </div>
+        <div className="mt-3 flex justify-center gap-4 text-[11px] text-text-muted">
+          <span><span className="mr-1 text-success">●</span>above avg</span>
+          <span><span className="mr-1 text-text-muted">●</span>near</span>
+          <span><span className="mr-1 text-accent">●</span>below</span>
+        </div>
 
         <label className="relative mt-4 block">
-          <Search
-            aria-hidden="true"
-            className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted"
-            size={17}
-          />
+          <Search aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
           <input
-            className="h-11 w-full rounded-2xl border border-border-default bg-bg-input py-2 pl-10 pr-4 text-sm font-medium text-text-primary placeholder:text-text-muted"
+            className="h-14 w-full rounded-2xl border border-border-default bg-bg-card py-3 pl-12 pr-4 text-[15px] font-medium text-text-primary placeholder:text-text-muted"
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search station, note, or vehicle"
+            placeholder="Search station, notes or cost..."
             type="search"
             value={search}
           />
         </label>
 
-        <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
           <select
             aria-label="Time period"
-            className="h-10 min-w-0 rounded-xl border border-border-default bg-bg-input px-3 text-xs font-semibold text-text-primary"
+            className="h-9 rounded-full border border-border-default bg-bg-card px-3 text-[13px] font-medium text-text-secondary"
             onChange={(event) => setTimePeriod(event.target.value as TimePeriod)}
             value={timePeriod}
           >
             <option value="all">All time</option>
             <option value="30-days">Last 30 days</option>
             <option value="90-days">Last 90 days</option>
-            <option value="this-year">This year</option>
+            <option value="this-year">{new Date().getFullYear()}</option>
           </select>
-          <select
-            aria-label="Fill type"
-            className="h-10 min-w-0 rounded-xl border border-border-default bg-bg-input px-3 text-xs font-semibold text-text-primary"
-            onChange={(event) => setFillType(event.target.value as FillTypeFilter)}
-            value={fillType}
-          >
-            <option value="all">All fills</option>
-            <option value="full">Full tank</option>
-            <option value="partial">Partial</option>
-          </select>
-          <select
-            aria-label="Sort history"
-            className="col-span-2 h-10 min-w-0 rounded-xl border border-border-default bg-bg-input px-3 text-xs font-semibold text-text-primary"
-            onChange={(event) => setSort(event.target.value as SortOption)}
-            value={sort}
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-            <option value="highest-cost">Highest cost</option>
-            <option value="best-economy">Best economy</option>
-          </select>
+          {([['all', 'All'], ['full', 'Full'], ['partial', 'Partial']] as const).map(([type, label]) => (
+            <button
+              className={`h-9 rounded-full px-4 text-[13px] font-medium ${fillType === type ? "bg-accent text-text-primary shadow-accent-glow" : "bg-bg-card text-text-muted"}`}
+              key={type}
+              onClick={() => setFillType(type)}
+              type="button"
+            >
+              {label}
+            </button>
+          ))}
+          <span className="ml-auto relative">
+            <select
+              aria-label="Sort history"
+              className="h-9 appearance-none rounded-full border border-border-default bg-bg-card py-0 pl-3 pr-8 text-[13px] font-medium text-text-secondary"
+              onChange={(event) => setSort(event.target.value as SortOption)}
+              value={sort}
+            >
+              <option value="newest">↓ Newest</option>
+              <option value="oldest">↑ Oldest</option>
+              <option value="best-economy">Best efficiency</option>
+              <option value="highest-cost">Highest cost</option>
+            </select>
+            <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" size={14} />
+          </span>
         </div>
       </div>
 
@@ -293,14 +275,15 @@ export function HistoryScreen() {
             {groupedFillUps.map(([key, monthFillUps]) => (
               <section key={key}>
                 <div className="mb-3 flex items-center justify-between px-1">
-                  <h2 className="text-sm font-bold text-text-primary">{monthLabel(key)}</h2>
+                  <h2 className="text-sm font-bold uppercase tracking-[0.04em] text-text-secondary">{monthLabel(key)}</h2>
                   <span className="text-xs text-text-muted">
-                    {monthFillUps.length} {monthFillUps.length === 1 ? "log" : "logs"}
+                    {monthFillUps.length} {monthFillUps.length === 1 ? "log" : "logs"} · {settings.currencySymbol}{monthFillUps.reduce((total, fillUp) => total + fillUp.totalCost, 0).toFixed(2)}
                   </span>
                 </div>
                 <div className="grid gap-3">
                   {monthFillUps.map((fillUp) => (
                     <FillUpCard
+                      averageEconomy={averageEconomy}
                       currencySymbol={settings.currencySymbol}
                       fillUp={fillUp}
                       isExpanded={expandedFillUpId === fillUp.id}

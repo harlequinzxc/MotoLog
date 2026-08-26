@@ -2,6 +2,7 @@
 
 import {
   Banknote,
+  Bike,
   CalendarDays,
   Fuel,
   Gauge,
@@ -116,6 +117,9 @@ export function LogFillUpSheet({
   const odometerDelta = Number.isFinite(odometerInput)
     ? odometerInput - currentOdometer
     : null;
+  const isSubmitReady = Boolean(
+    form.odometer.trim() && form.fuelAdded.trim() && form.totalCost.trim(),
+  );
 
   const updateForm = <Key extends keyof FillUpFormState>(
     key: Key,
@@ -192,11 +196,14 @@ export function LogFillUpSheet({
       title={fillUp ? "Edit fill-up" : "Log a fill-up"}
     >
       <form className="pb-2" noValidate onSubmit={handleSubmit}>
-        <div className="mb-6 rounded-2xl border border-accent/15 bg-accent/5 px-4 py-3">
-          <p className="text-[10px] font-bold tracking-[0.14em] text-accent">
-            LOGGING FOR
-          </p>
-          <p className="mt-1 text-sm font-bold text-text-primary">{vehicle.name}</p>
+        <div className="mb-6 flex items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-accent/5 px-4 py-3">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <Bike aria-hidden="true" size={18} className="shrink-0 text-accent" />
+            <p className="truncate text-[15px] font-bold text-text-primary">{vehicle.name}</p>
+          </div>
+          <span className="shrink-0 font-mono text-[11px] font-medium uppercase tabular-nums text-accent">
+            Last {formatNumber(currentOdometer)} {distanceUnit}
+          </span>
         </div>
 
         <div className="grid gap-5">
@@ -211,7 +218,7 @@ export function LogFillUpSheet({
                 size={19}
               />
               <input
-                className="h-[3.25rem] w-full rounded-2xl border border-border-default bg-bg-input py-3 pl-12 pr-4 text-base font-medium text-text-primary"
+                className="h-14 w-full rounded-2xl border border-border-default bg-bg-input py-3 pl-12 pr-4 text-base font-medium text-text-primary"
                 onChange={(event) => updateForm("date", event.target.value)}
                 type="date"
                 value={form.date}
@@ -233,7 +240,7 @@ export function LogFillUpSheet({
               <input
                 aria-describedby={errors.odometer ? "odometer-error" : "odometer-delta"}
                 aria-invalid={Boolean(errors.odometer)}
-                className={`h-[3.25rem] w-full rounded-2xl border bg-bg-input py-3 pl-12 pr-4 text-base font-medium text-text-primary placeholder:text-text-muted ${
+                className={`h-14 w-full rounded-2xl border bg-bg-input py-3 pl-12 pr-4 text-base font-medium text-text-primary placeholder:text-text-muted ${
                   errors.odometer ? "border-red-400" : "border-border-default"
                 }`}
                 inputMode="decimal"
@@ -289,7 +296,7 @@ export function LogFillUpSheet({
                 <input
                   aria-describedby={errors.fuelAdded ? "fuel-added-error" : undefined}
                   aria-invalid={Boolean(errors.fuelAdded)}
-                  className={`h-[3.25rem] w-full rounded-2xl border bg-bg-input py-3 pl-10 pr-3 text-base font-medium text-text-primary placeholder:text-text-muted ${
+                  className={`h-14 w-full rounded-2xl border bg-bg-input py-3 pl-10 pr-3 text-base font-medium text-text-primary placeholder:text-text-muted ${
                     errors.fuelAdded ? "border-red-400" : "border-border-default"
                   }`}
                   inputMode="decimal"
@@ -322,7 +329,7 @@ export function LogFillUpSheet({
                 <input
                   aria-describedby={errors.totalCost ? "total-cost-error" : undefined}
                   aria-invalid={Boolean(errors.totalCost)}
-                  className={`h-[3.25rem] w-full rounded-2xl border bg-bg-input py-3 pl-10 pr-3 text-base font-medium text-text-primary placeholder:text-text-muted ${
+                  className={`h-14 w-full rounded-2xl border bg-bg-input py-3 pl-10 pr-3 text-base font-medium text-text-primary placeholder:text-text-muted ${
                     errors.totalCost ? "border-red-400" : "border-border-default"
                   }`}
                   inputMode="decimal"
@@ -344,10 +351,10 @@ export function LogFillUpSheet({
 
           <button
             aria-pressed={form.isFullTank}
-            className={`flex items-center justify-between gap-4 rounded-2xl border p-4 text-left transition-colors ${
+            className={`flex items-center justify-between gap-4 rounded-2xl border p-4 text-left ${
               form.isFullTank
-                ? "border-accent/35 bg-accent/10"
-                : "border-border-default bg-bg-input"
+                ? "border-accent/35 bg-bg-elevated"
+                : "border-border-default bg-bg-elevated"
             }`}
             onClick={() => updateForm("isFullTank", !form.isFullTank)}
             type="button"
@@ -356,23 +363,24 @@ export function LogFillUpSheet({
               <span className="block text-sm font-bold text-text-primary">Full tank?</span>
               <span className="mt-1 block text-xs leading-4 text-text-secondary">
                 {form.isFullTank
-                  ? "Calculate economy from this fill-up."
+                  ? "Filled to the brim — mileage will be calculated."
                   : "Carry this partial fill forward to the next full tank."}
               </span>
             </span>
             <span
-              className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                form.isFullTank ? "bg-accent" : "bg-border-default"
+              className={`relative h-7 w-[52px] shrink-0 rounded-full shadow-[0_0_16px_rgb(var(--color-accent)_/_0.16)] ${
+                form.isFullTank ? "bg-accent" : "bg-bg-input"
               }`}
             >
               <span
-                className={`absolute top-1 size-4 rounded-full bg-text-primary shadow-sm transition-transform ${
-                  form.isFullTank ? "translate-x-6" : "translate-x-1"
+                className={`absolute top-[3px] size-[22px] rounded-full bg-text-primary shadow-sm ${
+                  form.isFullTank ? "translate-x-[27px]" : "translate-x-[3px]"
                 }`}
               />
             </span>
           </button>
 
+          <div className="grid grid-cols-2 gap-3">
           <label className="grid gap-2">
             <span className="text-[11px] font-bold tracking-[0.15em] text-text-muted">
               STATION <span className="normal-case font-normal tracking-normal">(optional)</span>
@@ -385,7 +393,7 @@ export function LogFillUpSheet({
               />
               <input
                 autoComplete="off"
-                className="h-[3.25rem] w-full rounded-2xl border border-border-default bg-bg-input py-3 pl-12 pr-4 text-base font-medium text-text-primary placeholder:text-text-muted"
+                className="h-14 w-full rounded-2xl border border-border-default bg-bg-input py-3 pl-12 pr-4 text-base font-medium text-text-primary placeholder:text-text-muted"
                 onChange={(event) => updateForm("station", event.target.value)}
                 placeholder="e.g. Shell Bukit Timah"
                 type="text"
@@ -413,11 +421,13 @@ export function LogFillUpSheet({
               />
             </div>
           </label>
+          </div>
         </div>
 
-        <div className="mt-8 border-t border-border-default pt-5">
+        <div className="sticky bottom-0 -mx-6 mt-8 border-t border-border-default bg-bg-base/95 px-6 pb-5 pt-5 backdrop-blur-xl">
           <button
-            className="h-[3.25rem] w-full rounded-2xl bg-accent px-4 text-sm font-bold text-text-primary shadow-accent-glow transition-transform hover:brightness-110 active:scale-[0.98]"
+            className="h-14 w-full rounded-2xl bg-accent px-6 text-base font-bold text-text-primary shadow-[0_4px_20px_rgb(var(--color-accent)_/_0.35)] hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={!isSubmitReady}
             type="submit"
           >
             {fillUp ? "Save changes" : "Save fill-up"}

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BarChart3,
   Bike,
   CalendarDays,
   CarFront,
@@ -12,18 +13,18 @@ import {
 } from "lucide-react";
 import { useMemo } from "react";
 
-import { MotoMark } from "@/components/branding/MotoMark";
 import { DashboardInsights } from "@/components/dashboard/DashboardInsights";
 import { GarageScreen } from "@/components/garage/GarageScreen";
 import { useAppContext } from "@/context/AppContext";
 import { calculateRangeBreakdown } from "@/lib/calculations";
-import { APP_NAME, APP_VERSION } from "@/lib/constants";
 import { parseCalendarDate } from "@/lib/date";
 import {
   formatDistance,
   formatEconomy,
   formatVolume,
+  fromKilometres,
   fromKilometresPerLitre,
+  fromLitres,
   resolveUnits,
 } from "@/lib/units";
 
@@ -39,11 +40,25 @@ function formatDate(date: string) {
   }).format(parseCalendarDate(date) ?? new Date(0));
 }
 
+function relativeDate(date: string) {
+  const parsed = parseCalendarDate(date);
+  if (!parsed) {
+    return "—";
+  }
+
+  const now = new Date();
+  const days = Math.max(
+    0,
+    Math.floor((now.getTime() - parsed.getTime()) / 86_400_000),
+  );
+  return days === 0 ? "today" : `${days}d ago`;
+}
+
 function todayLabel() {
   return new Intl.DateTimeFormat(undefined, {
-    day: "numeric",
+    day: "2-digit",
     month: "short",
-    weekday: "short",
+    year: "numeric",
   }).format(new Date());
 }
 
@@ -67,10 +82,12 @@ function trendInsight(economies: number[]) {
   return {
     isImprovement: percentage >= 0,
     percentage: Math.abs(percentage),
+    previousAverage,
+    recentAverage,
   };
 }
 
-/** The core metrics dashboard for the active vehicle. */
+/** The premium core metrics dashboard for the active vehicle. */
 export function DashboardScreen() {
   const {
     activeVehicle,
@@ -122,43 +139,63 @@ export function DashboardScreen() {
       ? (mainTankLitres / activeVehicle.tankCapacity) * 100
       : 0;
 
-  // The empty Dashboard deliberately reuses the Garage first-run experience.
   if (!isHydrated || vehicles.length === 0 || !activeVehicle) {
-    return <GarageScreen />;
+    return <GarageScreen variant="dashboard" />;
   }
 
   const VehicleIcon = activeVehicle.type === "motorcycle" ? Bike : CarFront;
+  const displayedRange = range
+    ? fromKilometres(range.totalRange, units.distance)
+    : null;
+  const displayedMainRange = range
+    ? fromKilometres(range.mainRange, units.distance)
+    : null;
+  const displayedReserveRange = range
+    ? fromKilometres(range.reserveRange, units.distance)
+    : null;
 
   return (
-    <section className="mx-auto min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] w-full max-w-lg px-5 pb-8 pt-[max(1.75rem,env(safe-area-inset-top))]">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <MotoMark size={31} />
+    <section className="mx-auto min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] w-full max-w-[480px] px-5 pb-10 pt-[max(1.5rem,env(safe-area-inset-top))]">
+      <header className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent text-text-primary shadow-accent-glow">
+            <Fuel aria-hidden="true" size={21} strokeWidth={2.4} />
+          </span>
           <div>
-            <span className="text-sm font-bold tracking-tight text-text-primary">
-              {APP_NAME}
-            </span>
-            <p className="mt-0.5 text-[11px] text-text-muted">{todayLabel()}</p>
+            <p className="text-xl font-bold tracking-tight text-text-primary">
+              Moto<span className="text-accent">Log</span>
+            </p>
+            <p className="mt-0.5 text-[10px] font-medium tracking-[0.08em] text-text-muted">
+              RIDE SMARTER. GO FURTHER.
+            </p>
           </div>
         </div>
-        <span className="rounded-full border border-border-default bg-bg-card px-3 py-1 text-xs font-medium text-text-secondary">
-          {APP_VERSION}
-        </span>
+        <div className="text-right">
+          <p className="text-[10px] font-medium tracking-[0.08em] text-text-muted">TODAY</p>
+          <p className="mt-1 font-mono text-sm font-bold tabular-nums text-text-primary">
+            {todayLabel()}
+          </p>
+        </div>
       </header>
 
-      <label className="mt-6 flex h-14 items-center gap-3 rounded-2xl border border-border-default bg-bg-card px-3">
-        <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
-          <VehicleIcon aria-hidden="true" size={19} />
+      <label className="mt-6 flex items-center gap-3 rounded-2xl border border-border-default bg-bg-card p-4 shadow-[0_10px_30px_rgb(0_0_0_/_0.12)]">
+        <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-bg-elevated text-text-secondary">
+          <VehicleIcon aria-hidden="true" size={20} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-[10px] font-bold tracking-[0.12em] text-text-muted">
-            ACTIVE VEHICLE
-          </span>
-          <span className="block truncate text-sm font-bold text-text-primary">
+          <span className="flex items-center gap-1.5 truncate text-base font-bold text-text-primary">
             {activeVehicle.name}
+            {vehicles.length > 1 ? <ChevronDown aria-hidden="true" size={13} className="text-text-muted" /> : null}
+          </span>
+          <span className="mt-1 block text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">
+            {activeVehicle.year ?? "—"} · {activeVehicle.type}
           </span>
         </span>
-        <span className="relative shrink-0">
+        <span className="relative shrink-0 rounded-xl border border-border-default px-3 py-2 text-right">
+          <span className="block text-[9px] font-medium uppercase tracking-[0.08em] text-text-muted">ODO</span>
+          <span className="mt-0.5 block font-mono text-sm font-bold tabular-nums text-accent">
+            {formatDistance(activeVehicle.currentOdometer, units)}
+          </span>
           <select
             aria-label="Select active vehicle"
             className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
@@ -171,147 +208,115 @@ export function DashboardScreen() {
               </option>
             ))}
           </select>
-          <ChevronDown aria-hidden="true" className="text-text-muted" size={18} />
         </span>
       </label>
 
-      <div className="mt-5 grid gap-4">
-        <article className="overflow-hidden rounded-3xl border border-border-default bg-bg-card p-5 shadow-[0_18px_48px_rgb(0_0_0_/_0.16)]">
-          <div className="flex items-start justify-between gap-4">
-            <p className="text-[11px] font-bold tracking-[0.16em] text-accent">RIDE</p>
+      <div className="mt-6 grid gap-6">
+        <article className="rounded-2xl border border-border-default bg-bg-card p-6 shadow-[0_0_40px_rgb(var(--color-accent)_/_0.06)]">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">RIDE</p>
             {trend ? (
               <span
-                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${
+                className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold ${
                   trend.isImprovement
-                    ? "bg-accent/10 text-accent"
-                    : "bg-red-500/10 text-red-300"
+                    ? "bg-success/15 text-success"
+                    : "bg-accent/15 text-accent"
                 }`}
               >
-                {trend.isImprovement ? (
-                  <TrendingUp aria-hidden="true" size={13} />
-                ) : (
-                  <TrendingDown aria-hidden="true" size={13} />
-                )}
-                {trend.isImprovement ? "improved" : "down"} {formatNumber(trend.percentage)}%
+                {trend.isImprovement ? <TrendingUp aria-hidden="true" size={13} /> : <TrendingDown aria-hidden="true" size={13} />}
+                {trend.isImprovement ? "improved" : "declined"} {formatNumber(trend.percentage)}%
               </span>
-            ) : (
-              <span className="rounded-full bg-bg-input px-2.5 py-1 text-[10px] font-bold text-text-muted">
-                BUILDING TREND
-              </span>
-            )}
+            ) : null}
           </div>
 
-          <div className="mt-5 flex items-end gap-2">
-            <p className="text-5xl font-bold leading-none tracking-[-0.06em] font-mono tabular-nums text-text-primary">
-              {displayAverageEconomy === null ? "—" : formatNumber(displayAverageEconomy)}
+          <div className="mt-6 text-center">
+            <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">
+              AVERAGE ECONOMY
             </p>
-            <p className="pb-1 text-sm font-bold text-text-secondary">
-              {units.economyLabel} avg
+            <div className="mt-2 flex items-baseline justify-center gap-2">
+              <p className="font-mono text-[56px] font-bold leading-none tracking-[-0.07em] tabular-nums text-text-primary">
+                {displayAverageEconomy === null ? "—" : formatNumber(displayAverageEconomy)}
+              </p>
+              <span className="text-xl font-semibold text-accent">{units.economyLabel}</span>
+            </div>
+            <p className="mt-3 text-[13px] text-text-secondary">
+              <span className="font-semibold text-success">Best {bestEconomy === null ? "—" : formatEconomy(bestEconomy, units)}</span>
+              <span className="mx-2 text-text-muted">•</span>
+              <span>Worst <span className="font-semibold text-accent">{worstEconomy === null ? "—" : formatEconomy(worstEconomy, units)}</span></span>
             </p>
           </div>
-          <p className="mt-2 text-xs text-text-muted">
-            {averageEconomy === null
-              ? "Log a full tank to unlock your ride economy."
-              : `${economies.length} full-tank ${economies.length === 1 ? "reading" : "readings"} recorded.`}
-          </p>
 
-          <div className="mt-5 grid grid-cols-2 gap-3 border-t border-border-default pt-4">
-            <div>
-              <p className="text-[10px] font-bold tracking-[0.12em] text-text-muted">BEST</p>
-              <p className="mt-1 text-sm font-bold font-mono tabular-nums text-text-primary">
-                {bestEconomy === null ? "—" : formatEconomy(bestEconomy, units)}
-              </p>
+          {trend && economies.length >= 6 ? (
+            <div className="mt-5 flex gap-3 rounded-xl bg-bg-elevated p-3.5">
+              <span className={`grid size-8 shrink-0 place-items-center rounded-full ${trend.isImprovement ? "bg-success/15 text-success" : "bg-accent/15 text-accent"}`}>
+                {trend.isImprovement ? <TrendingUp aria-hidden="true" size={16} /> : <TrendingDown aria-hidden="true" size={16} />}
+              </span>
+              <div>
+                <p className="text-sm leading-5 text-text-secondary">
+                  Your mileage has <span className={trend.isImprovement ? "font-bold text-success" : "font-bold text-accent"}>{trend.isImprovement ? "improved" : "declined"} {formatNumber(trend.percentage)}%</span> over the last 3 fill-ups.
+                </p>
+                <p className="mt-1 text-xs text-text-muted">
+                  {formatEconomy(trend.recentAverage, units)} vs {formatEconomy(trend.previousAverage, units)}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-[10px] font-bold tracking-[0.12em] text-text-muted">WORST</p>
-              <p className="mt-1 text-sm font-bold font-mono tabular-nums text-text-primary">
-                {worstEconomy === null ? "—" : formatEconomy(worstEconomy, units)}
-              </p>
-            </div>
-          </div>
+          ) : null}
         </article>
 
-        <article className="rounded-3xl border border-border-default bg-bg-card p-5">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-bold tracking-[0.16em] text-accent">
-                FULL TANK RANGE
-              </p>
-              <p className="mt-2 text-3xl font-bold tracking-tight font-mono tabular-nums text-text-primary">
-                {range ? `~${formatDistance(range.totalRange, units)}` : "—"}
-              </p>
-            </div>
-            <span className="grid size-11 place-items-center rounded-2xl bg-accent/10 text-accent">
-              <Gauge aria-hidden="true" size={22} />
+        <article className="rounded-2xl border border-border-default bg-bg-card p-5">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">FULL TANK RANGE</p>
+            <span className="rounded-lg border border-border-default px-2.5 py-1 font-mono text-xs font-semibold tabular-nums text-text-secondary">
+              {formatVolume(activeVehicle.tankCapacity, units)}
             </span>
           </div>
-          <p className="mt-2 text-xs leading-5 text-text-muted">
-            {range
-              ? "Estimated from your average full-tank economy."
-              : "Add a full-tank log to estimate your range."}
+          <div className="mt-4 flex items-baseline gap-2">
+            <p className="font-mono text-5xl font-bold leading-none tabular-nums text-text-primary">
+              {displayedRange === null ? "—" : formatNumber(displayedRange, 0)}
+            </p>
+            <span className="text-lg font-semibold text-accent">{units.distanceLabel}</span>
+          </div>
+          <p className="mt-2 text-[13px] text-text-muted">
+            {formatVolume(activeVehicle.tankCapacity, units)} × {displayAverageEconomy === null ? "—" : formatNumber(displayAverageEconomy)} {units.economyLabel} average
           </p>
 
-          <div className="mt-5 overflow-hidden rounded-full bg-bg-input p-1">
-            <div className="flex h-3 overflow-hidden rounded-full">
-              <span
-                className="bg-accent"
-                style={{ width: `${Math.max(mainRangePercentage, 0)}%` }}
-              />
-              <span className="flex-1 bg-text-muted/45" />
-            </div>
+          <div className="mt-4 flex h-3 overflow-hidden rounded-full bg-bg-elevated shadow-inner">
+            <span className="bg-accent" style={{ width: `${Math.max(mainRangePercentage, 0)}%` }} />
+            <span className="flex-1 bg-reserve" />
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
-            <div>
-              <p className="font-bold text-text-primary">
-                Main · {formatVolume(mainTankLitres, units)}
-              </p>
-              <p className="mt-1 text-text-muted">
-                {range ? `~${formatDistance(range.mainRange, units)}` : "Range pending"}
-              </p>
+          <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="rounded-xl bg-bg-elevated p-3.5">
+              <p className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.06em] text-text-secondary"><span className="size-2 rounded-full bg-accent" />Main tank</p>
+              <p className="mt-2 font-mono text-[22px] font-bold tabular-nums text-text-primary">{displayedMainRange === null ? "—" : formatNumber(displayedMainRange, 0)}<span className="ml-1 text-[13px] font-medium text-text-muted">{units.distanceLabel}</span></p>
+              <p className="mt-1 text-xs text-text-muted">{formatVolume(mainTankLitres, units)}</p>
             </div>
-            <div className="border-l border-border-default pl-3">
-              <p className="font-bold text-text-primary">
-                Reserve · {formatVolume(activeVehicle.reserve, units)}
-              </p>
-              <p className="mt-1 text-text-muted">
-                {range ? `~${formatDistance(range.reserveRange, units)}` : "Range pending"}
-              </p>
+            <div className="rounded-xl bg-bg-elevated p-3.5">
+              <p className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.06em] text-text-secondary"><span className="size-2 rounded-full bg-reserve" />Reserve tank</p>
+              <p className="mt-2 font-mono text-[22px] font-bold tabular-nums text-text-primary">{displayedReserveRange === null ? "—" : formatNumber(displayedReserveRange, 0)}<span className="ml-1 text-[13px] font-medium text-text-muted">{units.distanceLabel}</span></p>
+              <p className="mt-1 text-xs text-text-muted">{formatVolume(activeVehicle.reserve, units)}</p>
             </div>
           </div>
         </article>
 
         <section>
-          <p className="mb-3 px-1 text-[11px] font-bold tracking-[0.16em] text-text-muted">
-            QUICK STATS
-          </p>
-          <div className="grid grid-cols-3 overflow-hidden rounded-3xl border border-border-default bg-bg-card">
-            <div className="border-r border-border-default px-3 py-4">
-              <Fuel aria-hidden="true" size={16} className="text-accent" />
-              <p className="mt-3 text-[9px] font-bold tracking-[0.12em] text-text-muted">
-                AVG FILL
-              </p>
-              <p className="mt-1 text-sm font-bold font-mono tabular-nums text-text-primary">
-                {averageFill === null ? "—" : formatVolume(averageFill, units)}
-              </p>
-            </div>
-            <div className="border-r border-border-default px-3 py-4">
-              <Fuel aria-hidden="true" size={16} className="text-accent" />
-              <p className="mt-3 text-[9px] font-bold tracking-[0.12em] text-text-muted">
-                TOTAL FUEL
-              </p>
-              <p className="mt-1 text-sm font-bold font-mono tabular-nums text-text-primary">
-                {vehicleFillUps.length === 0 ? "—" : formatVolume(totalFuel, units)}
-              </p>
-            </div>
-            <div className="px-3 py-4">
-              <CalendarDays aria-hidden="true" size={16} className="text-accent" />
-              <p className="mt-3 text-[9px] font-bold tracking-[0.12em] text-text-muted">
-                LAST FILL
-              </p>
-              <p className="mt-1 text-xs font-bold leading-4 text-text-primary">
-                {lastFillUp ? formatDate(lastFillUp.date) : "—"}
-              </p>
-            </div>
+          <div className="grid grid-cols-3 gap-3">
+            <article className="rounded-2xl bg-bg-card p-4">
+              <Fuel aria-hidden="true" size={16} className="text-text-muted" />
+              <p className="mt-4 font-mono text-xl font-bold tabular-nums text-text-primary">{averageFill === null ? "—" : formatVolume(averageFill, units)}</p>
+              <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">AVG FILL</p>
+            </article>
+            <article className="rounded-2xl bg-bg-card p-4">
+              <BarChart3 aria-hidden="true" size={16} className="text-text-muted" />
+              <p className="mt-4 font-mono text-xl font-bold tabular-nums text-text-primary">{vehicleFillUps.length === 0 ? "—" : formatVolume(totalFuel, units)}</p>
+              <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">TOTAL FUEL</p>
+              <p className="mt-1 text-[11px] text-text-muted">{vehicleFillUps.length} fills</p>
+            </article>
+            <article className="rounded-2xl bg-bg-card p-4">
+              <CalendarDays aria-hidden="true" size={16} className="text-text-muted" />
+              <p className="mt-4 text-sm font-bold text-text-primary">{lastFillUp ? formatDate(lastFillUp.date) : "—"}</p>
+              <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">LAST FILL</p>
+              <p className="mt-1 text-[11px] text-text-muted">{lastFillUp ? relativeDate(lastFillUp.date) : "No logs"}</p>
+            </article>
           </div>
         </section>
 

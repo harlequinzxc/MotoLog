@@ -1,16 +1,19 @@
 "use client";
 
 import {
+  ArrowUpRight,
+  Bug,
+  Check,
   Download,
   Eraser,
   FileUp,
+  MessageCircle,
   Palette,
   ReceiptText,
   SlidersHorizontal,
 } from "lucide-react";
 import { useRef, useState, type ChangeEvent, type ReactNode } from "react";
 
-import { MotoMark } from "@/components/branding/MotoMark";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAppContext } from "@/context/AppContext";
 import { APP_NAME, APP_VERSION } from "@/lib/constants";
@@ -23,8 +26,11 @@ const CURRENCIES = [
   { code: "USD", symbol: "$", label: "USD" },
   { code: "EUR", symbol: "€", label: "EUR" },
   { code: "GBP", symbol: "£", label: "GBP" },
+  { code: "INR", symbol: "₹", label: "INR" },
   { code: "JPY", symbol: "¥", label: "JPY" },
-  { code: "AUD", symbol: "A$", label: "AUD" },
+  { code: "KRW", symbol: "₩", label: "KRW" },
+  { code: "BRL", symbol: "R$", label: "BRL" },
+  { code: "THB", symbol: "฿", label: "THB" },
 ] as const;
 
 interface Notice {
@@ -34,8 +40,8 @@ interface Notice {
 
 function SettingsSection({ children, title }: { children: ReactNode; title: string }) {
   return (
-    <section className="rounded-3xl border border-border-default bg-bg-card p-5">
-      <p className="text-[11px] font-bold tracking-[0.16em] text-accent">{title}</p>
+    <section className="rounded-2xl border border-border-default bg-bg-card p-5">
+      <p className="text-[13px] font-bold uppercase tracking-[0.05em] text-text-primary">{title}</p>
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -62,6 +68,7 @@ export function SettingsScreen() {
   const { accentTheme, accentThemes, setAccentTheme } = useTheme();
   const importInputRef = useRef<HTMLInputElement>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
+  const [lastExported, setLastExported] = useState<string | null>(null);
   const [isEraseDialogOpen, setIsEraseDialogOpen] = useState(false);
 
   const selectAccentTheme = (theme: AccentTheme) => {
@@ -133,6 +140,7 @@ export function SettingsScreen() {
       }),
       `motolog-backup-${new Date().toISOString().slice(0, 10)}.csv`,
     );
+    setLastExported(new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", year: "numeric" }).format(new Date()));
     setNotice({ kind: "success", text: "CSV backup downloaded." });
   };
 
@@ -178,7 +186,7 @@ export function SettingsScreen() {
 
   if (!isHydrated) {
     return (
-      <section className="mx-auto min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] w-full max-w-lg px-5 pb-8 pt-[max(1.75rem,env(safe-area-inset-top))]">
+      <section className="mx-auto min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] w-full max-w-[480px] px-5 pb-8 pt-[max(1.5rem,env(safe-area-inset-top))]">
         <div className="h-8 w-36 animate-pulse rounded bg-bg-input" />
         <div className="mt-8 h-44 animate-pulse rounded-3xl bg-bg-card" />
         <div className="mt-4 h-52 animate-pulse rounded-3xl bg-bg-card" />
@@ -187,25 +195,11 @@ export function SettingsScreen() {
   }
 
   return (
-    <section className="mx-auto min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] w-full max-w-lg px-5 pb-8 pt-[max(1.75rem,env(safe-area-inset-top))]">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <MotoMark size={31} />
-          <span className="text-sm font-bold tracking-tight text-text-primary">
-            {APP_NAME}
-          </span>
-        </div>
-        <span className="rounded-full border border-border-default bg-bg-card px-3 py-1 text-xs font-medium text-text-secondary">
-          Settings
-        </span>
+    <section className="mx-auto min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] w-full max-w-[480px] px-5 pb-12 pt-[max(1.5rem,env(safe-area-inset-top))]">
+      <header>
+        <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">TUNE THE MACHINE</p>
+        <h1 className="mt-1 text-3xl font-bold tracking-tight text-text-primary">Settings</h1>
       </header>
-
-      <div className="mt-7">
-        <p className="text-[11px] font-bold tracking-[0.16em] text-accent">PREFERENCES</p>
-        <h1 className="mt-1 text-3xl font-bold tracking-tight text-text-primary">
-          Make it yours
-        </h1>
-      </div>
 
       {notice ? (
         <p
@@ -231,7 +225,7 @@ export function SettingsScreen() {
             </div>
             <Palette aria-hidden="true" size={20} className="shrink-0 text-accent" />
           </div>
-          <div className="mt-5 grid grid-cols-5 gap-3">
+          <div className="mt-5 flex justify-between gap-3">
             {(Object.entries(accentThemes) as [
               AccentTheme,
               (typeof accentThemes)[AccentTheme],
@@ -241,19 +235,13 @@ export function SettingsScreen() {
                 <button
                   aria-label={`Use ${value.label}`}
                   aria-pressed={selected}
-                  className={`grid aspect-square place-items-center rounded-2xl border transition-transform hover:scale-105 active:scale-95 ${
-                    selected
-                      ? "border-text-primary bg-bg-input ring-2 ring-text-primary ring-offset-2 ring-offset-bg-card"
-                      : "border-border-default bg-bg-input"
-                  }`}
+                  className={`grid size-12 place-items-center rounded-full transition-transform hover:scale-105 ${selected ? "ring-4 ring-white/15" : ""}`}
                   key={theme}
                   onClick={() => selectAccentTheme(theme)}
+                  style={{ backgroundColor: value.hex, boxShadow: selected ? `0 0 20px ${value.hex}66` : undefined }}
                   type="button"
                 >
-                  <span
-                    className="size-7 rounded-full shadow-[inset_0_1px_1px_rgb(255_255_255_/_0.3)]"
-                    style={{ backgroundColor: value.hex }}
-                  />
+                  {selected ? <Check aria-hidden="true" size={17} strokeWidth={3} className="text-white" /> : null}
                 </button>
               );
             })}
@@ -270,16 +258,16 @@ export function SettingsScreen() {
             </div>
             <ReceiptText aria-hidden="true" size={20} className="shrink-0 text-accent" />
           </div>
-          <div className="mt-5 grid grid-cols-3 gap-2">
+          <div className="mt-5 grid grid-cols-4 gap-2">
             {CURRENCIES.map((currency) => {
               const selected = settings.currency === currency.code;
               return (
                 <button
                   aria-pressed={selected}
-                  className={`rounded-2xl border px-3 py-3 text-left transition-colors ${
+                  className={`flex h-14 flex-col items-center justify-center rounded-xl border text-center transition-colors ${
                     selected
                       ? "border-accent bg-accent text-text-primary shadow-accent-glow"
-                      : "border-border-default bg-bg-input text-text-primary hover:border-accent/40"
+                      : "border-border-default bg-bg-input text-text-secondary hover:border-accent/40"
                   }`}
                   key={currency.code}
                   onClick={() => selectCurrency(currency)}
@@ -371,7 +359,7 @@ export function SettingsScreen() {
           </p>
           <div className="mt-5 grid grid-cols-2 gap-3">
             <button
-              className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-accent px-3 text-sm font-bold text-text-primary shadow-accent-glow transition-transform hover:brightness-110 active:scale-[0.98]"
+              className="flex h-14 items-center justify-center gap-2 rounded-xl bg-bg-elevated px-3 text-sm font-bold text-text-primary hover:bg-bg-input"
               onClick={exportBackup}
               type="button"
             >
@@ -379,7 +367,7 @@ export function SettingsScreen() {
               Export CSV
             </button>
             <button
-              className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-border-default bg-bg-input px-3 text-sm font-bold text-text-primary transition-colors hover:border-accent/40 hover:bg-bg-card"
+              className="flex h-14 items-center justify-center gap-2 rounded-xl border border-accent/30 bg-accent/10 px-3 text-sm font-bold text-accent hover:bg-accent/15"
               onClick={() => importInputRef.current?.click()}
               type="button"
             >
@@ -394,13 +382,16 @@ export function SettingsScreen() {
               type="file"
             />
           </div>
-          <p className="mt-4 text-xs leading-5 text-text-muted">
+          <p className="mt-3 text-center text-[13px] text-text-muted">
+            Last exported: {lastExported ?? "Never"}
+          </p>
+          <p className="mt-3 text-xs leading-5 text-text-muted">
             Tip: edit the settings row first. Its currency and units determine how the remaining values are read on import.
           </p>
         </SettingsSection>
 
-        <section className="rounded-3xl border border-red-500/20 bg-red-500/5 p-5">
-          <p className="text-[11px] font-bold tracking-[0.16em] text-red-300">DANGER ZONE</p>
+        <section className="rounded-2xl border border-danger/20 border-l-[3px] border-l-danger bg-danger/5 p-5 shadow-[-4px_0_24px_rgb(239_68_68_/_0.1)]">
+          <p className="text-[13px] font-bold uppercase tracking-[0.05em] text-danger">DANGER ZONE</p>
           <div className="mt-4 flex items-start justify-between gap-4">
             <div>
               <h2 className="text-sm font-bold text-text-primary">Erase all data</h2>
@@ -408,10 +399,10 @@ export function SettingsScreen() {
                 Removes every vehicle, fill-up, and saved preference from this device.
               </p>
             </div>
-            <Eraser aria-hidden="true" size={20} className="shrink-0 text-red-300" />
+            <Eraser aria-hidden="true" size={20} className="shrink-0 text-danger" />
           </div>
           <button
-            className="mt-5 flex h-11 w-full items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10 text-sm font-bold text-red-200 transition-colors hover:bg-red-500/20"
+            className="mt-5 flex h-14 w-full items-center justify-center rounded-2xl bg-danger text-[15px] font-bold text-white shadow-[0_4px_20px_rgb(239_68_68_/_0.3)] hover:brightness-110"
             onClick={() => setIsEraseDialogOpen(true)}
             type="button"
           >
@@ -420,8 +411,22 @@ export function SettingsScreen() {
         </section>
       </div>
 
-      <footer className="pb-2 pt-8 text-center text-xs text-text-muted">
-        {APP_NAME} {APP_VERSION} · Local-first by design
+      <section className="mt-8">
+        <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">ABOUT & SUPPORT</p>
+        <div className="divide-y divide-border-default">
+          <button className="flex h-14 w-full items-center gap-3 px-4 text-left text-sm text-text-secondary hover:text-text-primary" type="button">
+            <MessageCircle aria-hidden="true" size={18} className="text-text-muted" />
+            <span className="flex-1">Send feedback</span><ArrowUpRight aria-hidden="true" size={16} className="text-text-muted" />
+          </button>
+          <button className="flex h-14 w-full items-center gap-3 px-4 text-left text-sm text-text-secondary hover:text-text-primary" type="button">
+            <Bug aria-hidden="true" size={18} className="text-text-muted" />
+            <span className="flex-1">Report a bug</span><ArrowUpRight aria-hidden="true" size={16} className="text-text-muted" />
+          </button>
+        </div>
+      </section>
+
+      <footer className="mb-24 pt-8 text-center text-xs text-text-muted">
+        {APP_NAME} {APP_VERSION} · For Drivers & Riders
       </footer>
 
       <ConfirmDialog

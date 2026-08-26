@@ -7,12 +7,14 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  LabelList,
   ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
+import { Droplet, Fuel, Route, Wallet } from "lucide-react";
 
 import { parseCalendarDate } from "@/lib/date";
 import {
@@ -165,163 +167,115 @@ export function DashboardInsights({
     : null;
 
   return (
-    <div className="grid gap-4">
-      <section className="rounded-3xl border border-border-default bg-bg-card p-5">
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <p className="text-[11px] font-bold tracking-[0.16em] text-accent">COSTS</p>
-            <p className="mt-2 text-3xl font-bold tracking-tight font-mono tabular-nums text-text-primary">
+    <div className="grid gap-6">
+      <section>
+        <p className="mb-3 px-1 text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">COSTS</p>
+        <article className="rounded-2xl border border-border-default bg-bg-card p-5">
+          <div className="flex items-center gap-2 text-text-muted">
+            <Wallet aria-hidden="true" size={17} />
+            <p className="text-[10px] font-medium uppercase tracking-[0.08em]">SPENT THIS MONTH</p>
+          </div>
+          <div className="mt-3 flex flex-wrap items-baseline gap-3">
+            <p className="font-mono text-[32px] font-bold tracking-tight tabular-nums text-text-primary">
               {formatCurrency(currencySymbol, currentMonthSpend)}
             </p>
-            <p className="mt-1 text-xs text-text-muted">Spent this month</p>
+            {monthDifference !== null ? (
+              <span className={`rounded-lg px-2.5 py-1 text-xs font-semibold ${
+                monthDifference <= 0 ? "bg-success/15 text-success" : "bg-accent/15 text-accent"
+              }`}>
+                {monthDifference <= 0 ? "↘" : "↗"} {formatNumber(Math.abs(monthDifference))}%
+              </span>
+            ) : null}
+            <span className="text-xs text-text-muted">vs last month</span>
           </div>
-          <div className="rounded-2xl border border-border-default bg-bg-input px-3 py-2 text-right">
-            <p className="text-[9px] font-bold tracking-[0.12em] text-text-muted">LAST MONTH</p>
-            <p className="mt-1 text-xs font-bold font-mono tabular-nums text-text-primary">
-              {formatCurrency(currencySymbol, previousMonthSpend)}
-            </p>
-            <p className={`mt-1 text-[10px] font-bold ${
-              monthDifference === null || monthDifference <= 0 ? "text-accent" : "text-red-300"
-            }`}>
-              {monthDifference === null
-                ? "No prior data"
-                : `${monthDifference > 0 ? "+" : ""}${formatNumber(monthDifference)}%`}
-            </p>
-          </div>
-        </div>
+          <p className="mt-2 text-xs text-text-muted">
+            {formatCurrency(currencySymbol, totalCost)} lifetime · {formatCurrency(currencySymbol, previousMonthSpend)} last month
+          </p>
+        </article>
 
-        <div className="mt-5 grid grid-cols-2 gap-3 border-t border-border-default pt-4">
-          <div>
-            <p className="text-[10px] font-bold tracking-[0.12em] text-text-muted">
-              COST / {units.distanceLabel.toUpperCase()}
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <article className="rounded-2xl border border-border-default bg-bg-card p-4">
+            <div className="flex items-center gap-2 text-text-muted"><Route aria-hidden="true" size={16} /><p className="text-[10px] font-medium uppercase tracking-[0.06em]">COST / {units.distanceLabel}</p></div>
+            <p className="mt-3 font-mono text-[26px] font-bold tabular-nums text-text-primary">
+              {costPerDistance === null ? "—" : formatCurrency(currencySymbol, costPerDistance)}
             </p>
-            <p className="mt-1 text-sm font-bold font-mono tabular-nums text-text-primary">
-              {costPerDistance === null
-                ? "—"
-                : `${formatCurrency(currencySymbol, costPerDistance)}/${units.distanceLabel}`}
+          </article>
+          <article className="rounded-2xl border border-border-default bg-bg-card p-4">
+            <div className="flex items-center gap-2 text-text-muted"><Droplet aria-hidden="true" size={16} /><p className="text-[10px] font-medium uppercase tracking-[0.06em]">FUEL PRICE</p></div>
+            <p className="mt-3 font-mono text-[26px] font-bold tabular-nums text-text-primary">
+              {averageFuelPrice === null ? "—" : formatCurrency(currencySymbol, averageFuelPrice)}
             </p>
-          </div>
-          <div>
-            <p className="text-[10px] font-bold tracking-[0.12em] text-text-muted">AVG FUEL PRICE</p>
-            <p className="mt-1 text-sm font-bold font-mono tabular-nums text-text-primary">
-              {averageFuelPrice === null
-                ? "—"
-                : `${formatCurrency(currencySymbol, averageFuelPrice)}/${units.volumeLabel}`}
-            </p>
-          </div>
+            <p className="mt-1 text-[11px] text-text-muted">avg per {units.volumeLabel}</p>
+          </article>
         </div>
       </section>
 
-      <section className="rounded-3xl border border-border-default bg-bg-card p-5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-bold tracking-[0.16em] text-accent">TRENDS</p>
-            <h2 className="mt-1 text-lg font-bold tracking-tight text-text-primary">
-              Economy over time
-            </h2>
+      <section>
+        <p className="mb-3 px-1 text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">TRENDS</p>
+        <article className="rounded-2xl border border-border-default bg-bg-card p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2"><Fuel aria-hidden="true" size={17} className="text-accent" /><h2 className="text-sm font-bold uppercase tracking-[0.05em] text-text-primary">ECONOMY TREND</h2></div>
+            <span className="text-xs text-text-muted">{economyTrend.length} readings</span>
           </div>
-          {averageEconomy !== null ? (
-            <span className="rounded-full bg-accent/10 px-2.5 py-1 text-[10px] font-bold text-accent">
-              AVG {formatNumber(averageEconomy)} {units.economyLabel}
-            </span>
-          ) : null}
-        </div>
 
-        {economyTrend.length > 0 ? (
-          <div className="mt-5 h-52" role="img" aria-label="Economy trend chart">
+          {economyTrend.length > 0 ? (
+            <>
+              <div className="mt-5 h-[200px]" role="img" aria-label="Economy trend chart">
+                <ResponsiveContainer height="100%" width="100%">
+                  <AreaChart data={economyTrend} margin={{ top: 12, right: 8, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="economy-area" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.3} />
+                        <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid stroke="rgb(160 160 168 / 0.15)" strokeDasharray="3 5" vertical={false} />
+                    <XAxis axisLine={false} dataKey="date" interval="preserveStartEnd" tick={{ fill: "#6B6B74", fontSize: 10 }} tickLine={false} />
+                    <YAxis axisLine={false} tick={{ fill: "#6B6B74", fontSize: 10 }} tickCount={3} tickLine={false} tickFormatter={(value) => `${value}`} />
+                    <Tooltip content={<ChartTooltip suffix={` ${units.economyLabel}`} />} cursor={{ stroke: "#6B6B74", strokeDasharray: "3 3" }} />
+                    {averageEconomy !== null ? (
+                      <ReferenceLine
+                        label={{ fill: "#84CC16", fontSize: 11, fontWeight: 700, position: "insideTopRight", value: `AVG ${formatNumber(averageEconomy)}` }}
+                        stroke="#84CC16"
+                        strokeDasharray="3 3"
+                        y={averageEconomy}
+                      />
+                    ) : null}
+                    <Area activeDot={{ r: 6, fill: "var(--accent)", stroke: "#1A1A1E", strokeWidth: 2 }} dataKey="economy" dot={{ r: 3, fill: "#1A1A1E", stroke: "var(--accent)", strokeWidth: 2 }} fill="url(#economy-area)" stroke="var(--accent)" strokeWidth={2.5} type="monotone" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+              <p className="mt-3 text-center text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">{units.economyLabel} PER FULL-TANK FILL</p>
+            </>
+          ) : (
+            <div className="mt-5 flex h-[200px] items-center justify-center rounded-2xl border border-dashed border-border-default bg-bg-elevated px-6 text-center text-sm leading-6 text-text-muted">Log a full tank to reveal your economy trend.</div>
+          )}
+        </article>
+      </section>
+
+      <section>
+        <article className="rounded-2xl border border-border-default bg-bg-card p-5">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2"><Wallet aria-hidden="true" size={17} className="text-accent" /><h2 className="text-sm font-bold uppercase tracking-[0.05em] text-text-primary">SPENDING</h2></div>
+            <span className="text-xs text-text-muted">Past 6 months</span>
+          </div>
+          <div className="mt-5 h-[200px]" role="img" aria-label="Monthly spending chart">
             <ResponsiveContainer height="100%" width="100%">
-              <AreaChart data={economyTrend} margin={{ top: 8, right: 4, left: -22, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="economy-area" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.42} />
-                    <stop offset="100%" stopColor="var(--accent)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid stroke="#2A2A30" strokeDasharray="3 5" vertical={false} />
-                <XAxis
-                  axisLine={false}
-                  dataKey="date"
-                  minTickGap={22}
-                  tick={{ fill: "#6B6B74", fontSize: 10 }}
-                  tickLine={false}
-                />
-                <YAxis
-                  axisLine={false}
-                  tick={{ fill: "#6B6B74", fontSize: 10 }}
-                  tickLine={false}
-                  tickFormatter={(value) => `${value}`}
-                />
-                <Tooltip
-                  content={<ChartTooltip suffix={` ${units.economyLabel}`} />}
-                  cursor={{ stroke: "#6B6B74", strokeDasharray: "3 3" }}
-                />
-                {averageEconomy !== null ? (
-                  <ReferenceLine
-                    label={{ fill: "#A0A0A8", fontSize: 10, position: "insideTopRight", value: "avg" }}
-                    stroke="#A0A0A8"
-                    strokeDasharray="5 5"
-                    y={averageEconomy}
-                  />
-                ) : null}
-                <Area
-                  dataKey="economy"
-                  fill="url(#economy-area)"
-                  stroke="var(--accent)"
-                  strokeWidth={2.5}
-                  type="monotone"
-                />
-              </AreaChart>
+              <BarChart data={spending} margin={{ top: 24, right: 4, left: 0, bottom: 0 }}>
+                <XAxis axisLine={false} dataKey="label" tick={{ fill: "#6B6B74", fontSize: 10 }} tickLine={false} />
+                <YAxis hide />
+                <Tooltip content={<ChartTooltip currencySymbol={currencySymbol} />} cursor={{ fill: "rgb(255 255 255 / 0.03)" }} />
+                <Bar dataKey="spend" radius={[8, 8, 2, 2]}>
+                  <LabelList dataKey="spend" fill="#A0A0A8" fontSize={10} formatter={(value) => formatCurrency(currencySymbol, Number(value))} position="top" />
+                  {spending.map((entry) => (
+                    <Cell fill={entry.isCurrent ? "var(--accent)" : "#3A3A42"} key={entry.key} />
+                  ))}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </div>
-        ) : (
-          <div className="mt-5 flex h-52 items-center justify-center rounded-2xl border border-dashed border-border-default bg-bg-input px-6 text-center text-sm leading-6 text-text-muted">
-            Log a full tank to reveal your economy trend.
-          </div>
-        )}
-      </section>
-
-      <section className="rounded-3xl border border-border-default bg-bg-card p-5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] font-bold tracking-[0.16em] text-accent">TRENDS</p>
-            <h2 className="mt-1 text-lg font-bold tracking-tight text-text-primary">
-              Monthly spending
-            </h2>
-          </div>
-          <span className="text-xs text-text-muted">Past 6 months</span>
-        </div>
-
-        <div className="mt-5 h-52" role="img" aria-label="Monthly spending chart">
-          <ResponsiveContainer height="100%" width="100%">
-            <BarChart data={spending} margin={{ top: 8, right: 4, left: -22, bottom: 0 }}>
-              <CartesianGrid stroke="#2A2A30" strokeDasharray="3 5" vertical={false} />
-              <XAxis
-                axisLine={false}
-                dataKey="label"
-                tick={{ fill: "#6B6B74", fontSize: 10 }}
-                tickLine={false}
-              />
-              <YAxis
-                axisLine={false}
-                tick={{ fill: "#6B6B74", fontSize: 10 }}
-                tickFormatter={(value) => `${currencySymbol}${value}`}
-                tickLine={false}
-              />
-              <Tooltip
-                content={<ChartTooltip currencySymbol={currencySymbol} />}
-                cursor={{ fill: "rgb(255 255 255 / 0.03)" }}
-              />
-              <Bar dataKey="spend" radius={[7, 7, 2, 2]}>
-                {spending.map((entry) => (
-                  <Cell
-                    fill={entry.isCurrent ? "var(--accent)" : "#3A3A42"}
-                    key={entry.key}
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+          <p className="mt-3 text-center text-[10px] font-medium uppercase tracking-[0.08em] text-text-muted">MONTHLY FUEL SPEND</p>
+        </article>
       </section>
     </div>
   );

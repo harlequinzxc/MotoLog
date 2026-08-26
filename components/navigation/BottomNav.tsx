@@ -1,6 +1,6 @@
 "use client";
 
-import { Bike, History, LayoutDashboard, Plus, Settings } from "lucide-react";
+import { Fuel, History, LayoutDashboard, Settings, Warehouse } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -11,7 +11,7 @@ import { useAppContext } from "@/context/AppContext";
 const navigationItems = [
   { label: "Dash", href: "/", icon: LayoutDashboard },
   { label: "History", href: "/history", icon: History },
-  { label: "Garage", href: "/garage", icon: Bike },
+  { label: "Garage", href: "/garage", icon: Warehouse },
   { label: "Settings", href: "/settings", icon: Settings },
 ] as const;
 
@@ -34,14 +34,19 @@ function NavLink({ href, icon: Icon, label, pathname }: NavLinkProps) {
   return (
     <Link
       aria-current={active ? "page" : undefined}
-      className={`relative flex h-[4.5rem] flex-col items-center justify-center gap-1 border-t-2 px-1 text-[10px] font-semibold tracking-[0.01em] transition-colors duration-200 ${
+      className={`relative flex h-[4.5rem] flex-col items-center justify-center gap-1 border-t-2 px-1 text-[10px] font-semibold uppercase tracking-[0.06em] transition-all duration-150 ${
         active
-          ? "border-accent text-accent"
+          ? "border-text-primary text-text-primary"
           : "border-transparent text-text-muted hover:text-text-secondary"
       }`}
       href={href}
     >
-      <Icon aria-hidden="true" size={21} strokeWidth={active ? 2.5 : 2} />
+      <Icon
+        aria-hidden="true"
+        className={active ? "scale-105 drop-shadow-[0_0_8px_rgb(255_255_255_/_0.18)]" : undefined}
+        size={22}
+        strokeWidth={active ? 2.5 : 2}
+      />
       <span>{label}</span>
     </Link>
   );
@@ -77,24 +82,24 @@ export function BottomNav() {
     <>
       <nav
         aria-label="Primary navigation"
-        className="fixed inset-x-0 bottom-0 z-50 border-t border-border-default bg-bg-base/95 backdrop-blur-lg"
+        className="fixed inset-x-0 bottom-0 z-50 border-t border-border-default bg-bg-base/95 before:pointer-events-none before:absolute before:-top-10 before:inset-x-0 before:h-10 before:bg-gradient-to-t before:from-bg-base before:via-bg-base/60 before:to-transparent backdrop-blur-xl"
       >
-        <div className="mx-auto grid h-[calc(4.5rem+env(safe-area-inset-bottom))] max-w-lg grid-cols-5 px-1 pb-[env(safe-area-inset-bottom)]">
+        <div className="relative mx-auto grid h-[calc(4.5rem+env(safe-area-inset-bottom))] max-w-[480px] grid-cols-5 px-1 pb-[env(safe-area-inset-bottom)]">
           {navigationItems.slice(0, 2).map((item) => (
             <NavLink key={item.href} pathname={pathname} {...item} />
           ))}
 
-          <div className="relative flex h-[4.5rem] flex-col items-center pt-10">
+          <div className="relative flex h-[4.5rem] flex-col items-center pt-11">
             <button
               aria-label="Log a fill-up"
-              className="absolute -top-7 grid size-14 place-items-center rounded-full bg-accent text-bg-base shadow-[0_12px_34px_rgb(var(--color-accent)_/_0.46)] transition-transform duration-200 hover:scale-105 active:scale-95"
+              className="absolute -top-4 grid size-14 place-items-center rounded-2xl bg-accent text-text-primary shadow-[0_4px_24px_rgb(var(--color-accent)_/_0.5),0_0_0_4px_rgb(var(--color-accent)_/_0.1)] transition-transform duration-150 hover:-translate-y-0.5"
               onClick={handleLogFill}
               title="Log a fill-up"
               type="button"
             >
-              <Plus aria-hidden="true" size={27} strokeWidth={3} />
+              <Fuel aria-hidden="true" size={24} strokeWidth={2.4} />
             </button>
-            <span className="text-[10px] font-semibold tracking-[0.01em] text-text-secondary">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.06em] text-accent">
               Log Fill
             </span>
           </div>

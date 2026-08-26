@@ -11,12 +11,11 @@ import {
 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
-import { MotoMark } from "@/components/branding/MotoMark";
 import { VehicleCard } from "@/components/garage/VehicleCard";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useAppContext } from "@/context/AppContext";
-import { APP_NAME, APP_VERSION } from "@/lib/constants";
+import { APP_NAME } from "@/lib/constants";
 import type { UnitPreference, Vehicle, VehicleType } from "@/lib/types";
 
 type UnitPreferenceChoice = "metric" | "imperial";
@@ -88,11 +87,23 @@ function getVehicleUnitChoice(vehicle: Vehicle): UnitPreferenceChoice {
   return vehicle.unitPreference?.distance === "mi" ? "imperial" : "metric";
 }
 
+interface GarageScreenProps {
+  variant?: "dashboard" | "garage";
+}
+
+function todayLabel() {
+  return new Intl.DateTimeFormat(undefined, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date());
+}
+
 /**
  * The Garage destination owns the add-vehicle sheet and is deliberately shared
  * with the empty dashboard, so the first-run experience is identical anywhere.
  */
-export function GarageScreen() {
+export function GarageScreen({ variant = "garage" }: GarageScreenProps) {
   const {
     addVehicle,
     deleteVehicle,
@@ -248,18 +259,49 @@ export function GarageScreen() {
       };
 
   return (
-    <section className="mx-auto flex min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] w-full max-w-lg flex-col px-5 pb-8 pt-[max(2rem,env(safe-area-inset-top))]">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <MotoMark size={31} />
-          <span className="text-sm font-bold tracking-tight text-text-primary">
-            {APP_NAME}
-          </span>
-        </div>
-        <span className="rounded-full border border-border-default bg-bg-card px-3 py-1 text-xs font-medium text-text-secondary">
-          {APP_VERSION}
-        </span>
-      </header>
+    <section className="mx-auto flex min-h-[calc(100dvh-4.5rem-env(safe-area-inset-bottom))] w-full max-w-[480px] flex-col px-5 pb-8 pt-[max(1.5rem,env(safe-area-inset-top))]">
+      {variant === "dashboard" ? (
+        <header className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="grid size-10 place-items-center rounded-xl bg-accent text-text-primary shadow-accent-glow">
+              <Fuel aria-hidden="true" size={21} strokeWidth={2.4} />
+            </span>
+            <div>
+              <p className="text-xl font-bold tracking-tight text-text-primary">
+                Moto<span className="text-accent">Log</span>
+              </p>
+              <p className="mt-0.5 text-[10px] font-medium tracking-[0.08em] text-text-muted">
+                RIDE SMARTER. GO FURTHER.
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-[10px] font-medium tracking-[0.08em] text-text-muted">TODAY</p>
+            <p className="mt-1 font-mono text-sm font-bold tabular-nums text-text-primary">
+              {todayLabel()}
+            </p>
+          </div>
+        </header>
+      ) : (
+        <header className="flex items-end justify-between gap-4">
+          <div>
+            <p className="text-[10px] font-medium tracking-[0.08em] text-text-muted">
+              CARS & BIKES
+            </p>
+            <h1 className="mt-1 text-3xl font-bold tracking-tight text-text-primary">
+              Garage{vehicleCount > 0 ? <span className="ml-2 text-lg font-medium text-text-muted">{vehicleCount}</span> : null}
+            </h1>
+          </div>
+          <button
+            className="mb-0.5 flex h-10 items-center gap-1.5 rounded-full bg-accent px-4 text-xs font-semibold text-text-primary shadow-accent-glow"
+            onClick={() => openVehicleSheet()}
+            type="button"
+          >
+            <Plus aria-hidden="true" size={15} />
+            Add vehicle
+          </button>
+        </header>
+      )}
 
       <div className="flex flex-1 flex-col py-10">
         {!isHydrated ? (
@@ -269,64 +311,42 @@ export function GarageScreen() {
             <div className="mx-auto mt-3 h-4 w-56 animate-pulse rounded bg-bg-input" />
           </div>
         ) : vehicleCount === 0 ? (
-          <article className="my-auto rounded-3xl border border-border-default bg-bg-card p-6 text-center shadow-[0_18px_48px_rgb(0_0_0_/_0.18)]">
-            <span className="mx-auto grid size-16 place-items-center rounded-3xl border border-accent/20 bg-accent/10 text-accent shadow-accent-glow">
-              <Bike aria-hidden="true" size={30} strokeWidth={2} />
+          <article className="my-auto rounded-2xl border border-border-default bg-bg-card px-6 py-8 text-center shadow-[0_16px_44px_rgb(0_0_0_/_0.2)]">
+            <span className="mx-auto flex w-fit items-center gap-3 rounded-2xl bg-accent/10 p-4 text-accent">
+              <Bike aria-hidden="true" size={26} strokeWidth={2.1} />
+              <CarFront aria-hidden="true" size={26} strokeWidth={2.1} />
             </span>
-            <p className="mt-7 text-xs font-bold tracking-[0.18em] text-accent">
-              YOUR GARAGE
-            </p>
-            <h1 className="mt-3 text-3xl font-bold tracking-tight text-text-primary">
-              No vehicles yet
+            <h1 className="mt-6 text-xl font-bold tracking-tight text-text-primary">
+              {variant === "dashboard" ? "Your garage is empty" : "No vehicles yet"}
             </h1>
-            <p className="mx-auto mt-3 max-w-xs text-sm leading-6 text-text-secondary">
-              Add your first ride to start tracking fuel, mileage, and costs.
+            <p className="mx-auto mt-3 max-w-[280px] text-sm leading-6 text-text-secondary">
+              Add your first car or motorcycle to start tracking fuel mileage and expenses.
             </p>
-            <div className="mt-8 grid gap-3">
+            <div className="mt-7 grid gap-3">
               <button
-                className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-accent px-4 text-sm font-bold text-text-primary shadow-accent-glow transition-transform hover:brightness-110 active:scale-[0.98]"
+                className="flex h-[52px] items-center justify-center gap-2 rounded-full bg-accent px-5 text-[15px] font-semibold text-text-primary shadow-[0_4px_24px_rgb(var(--color-accent)_/_0.35)]"
                 onClick={() => openVehicleSheet()}
                 type="button"
               >
                 <Plus aria-hidden="true" size={18} strokeWidth={2.7} />
-                Add a vehicle
+                {variant === "dashboard" ? "Add your first vehicle" : "Add a vehicle"}
               </button>
               <button
-                className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-border-default bg-bg-input px-4 text-sm font-semibold text-text-primary transition-colors hover:border-accent/40 hover:bg-bg-card"
+                className="flex h-[52px] items-center justify-center gap-2 rounded-full border border-border-default bg-transparent px-5 text-sm font-medium text-text-muted hover:border-accent/40 hover:text-text-secondary"
                 onClick={loadDemoData}
                 type="button"
               >
                 <Sparkles aria-hidden="true" size={17} className="text-accent" />
-                Load demo data
+                Load demo ride data
               </button>
             </div>
-            <p className="mt-5 text-xs leading-5 text-text-muted">
-              Demo data adds a Yamaha MT-15 and 12 fill-ups to this device.
+            <p className="mt-5 text-[11px] italic leading-5 text-text-muted">
+              Vehicle data stays private on this device.
             </p>
           </article>
         ) : (
           <div className="grid gap-4">
-            <div className="flex items-end justify-between gap-4 px-1">
-              <div>
-                <p className="text-[11px] font-bold tracking-[0.15em] text-accent">
-                  YOUR GARAGE
-                </p>
-                <h1 className="mt-1 text-2xl font-bold tracking-tight text-text-primary">
-                  {vehicleCount} {vehicleCount === 1 ? "vehicle" : "vehicles"}
-                </h1>
-              </div>
-              <button
-                aria-label="Add a vehicle"
-                className="flex h-10 items-center gap-1.5 rounded-xl bg-accent px-3 text-xs font-bold text-text-primary shadow-accent-glow transition-transform hover:brightness-110 active:scale-[0.98]"
-                onClick={() => openVehicleSheet()}
-                type="button"
-              >
-                <Plus aria-hidden="true" size={16} strokeWidth={2.7} />
-                Add
-              </button>
-            </div>
-
-            <div className="grid gap-3">
+            <div className="grid gap-4">
               {sortedVehicles.map((vehicle) => (
                 <VehicleCard
                   fillUps={getVehicleFillUps(vehicle.id)}
@@ -343,9 +363,6 @@ export function GarageScreen() {
         )}
       </div>
 
-      <p className="text-center text-xs text-text-muted">
-        Vehicle data stays private on this device.
-      </p>
 
       <BottomSheet
         isOpen={isSheetOpen}
@@ -359,7 +376,7 @@ export function GarageScreen() {
             </legend>
             <div
               aria-label="Vehicle type"
-              className="mt-3 grid grid-cols-2 rounded-2xl border border-border-default bg-bg-input p-1"
+              className="mt-3 grid grid-cols-2 rounded-full border border-border-default bg-bg-input p-1"
               role="group"
             >
               {(
@@ -372,7 +389,7 @@ export function GarageScreen() {
                 return (
                   <button
                     aria-pressed={selected}
-                    className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-2 py-2 text-sm font-bold transition-all ${
+                    className={`flex min-h-11 items-center justify-center gap-2 rounded-full px-2 py-2 text-sm font-bold transition-all ${
                       selected
                         ? "bg-accent text-text-primary shadow-accent-glow"
                         : "text-text-secondary hover:text-text-primary"
@@ -405,7 +422,7 @@ export function GarageScreen() {
                   aria-invalid={Boolean(errors.name)}
                   autoComplete="off"
                   autoFocus
-                  className={`h-[3.25rem] w-full rounded-2xl border bg-bg-input py-3 pl-12 pr-4 text-base font-medium text-text-primary placeholder:text-text-muted ${
+                  className={`h-14 w-full rounded-2xl border bg-bg-input py-3 pl-12 pr-4 text-base font-medium text-text-primary placeholder:text-text-muted ${
                     errors.name ? "border-red-400" : "border-border-default"
                   }`}
                   onChange={(event) => updateForm("name", event.target.value)}
@@ -427,7 +444,7 @@ export function GarageScreen() {
                   YEAR
                 </span>
                 <input
-                  className="h-[3.25rem] w-full rounded-2xl border border-border-default bg-bg-input px-4 text-base font-medium text-text-primary placeholder:text-text-muted"
+                  className="h-14 w-full rounded-2xl border border-border-default bg-bg-input px-4 text-base font-medium text-text-primary placeholder:text-text-muted"
                   inputMode="numeric"
                   max={CURRENT_YEAR + 1}
                   min="1886"
@@ -449,7 +466,7 @@ export function GarageScreen() {
                     errors.tankCapacity ? "tank-capacity-error" : undefined
                   }
                   aria-invalid={Boolean(errors.tankCapacity)}
-                  className={`h-[3.25rem] w-full rounded-2xl border bg-bg-input px-4 text-base font-medium text-text-primary placeholder:text-text-muted ${
+                  className={`h-14 w-full rounded-2xl border bg-bg-input px-4 text-base font-medium text-text-primary placeholder:text-text-muted ${
                     errors.tankCapacity ? "border-red-400" : "border-border-default"
                   }`}
                   inputMode="decimal"
@@ -482,11 +499,11 @@ export function GarageScreen() {
               <div className="relative">
                 <TriangleAlert
                   aria-hidden="true"
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-accent"
                   size={19}
                 />
                 <input
-                  className="h-[3.25rem] w-full rounded-2xl border border-border-default bg-bg-input py-3 pl-12 pr-4 text-base font-medium text-text-primary placeholder:text-text-muted"
+                  className="h-14 w-full rounded-xl border border-border-default bg-bg-input py-3 pl-12 pr-4 text-[15px] font-medium text-text-primary placeholder:text-text-muted"
                   inputMode="decimal"
                   min="0"
                   onChange={(event) => updateForm("reserve", event.target.value)}
@@ -513,7 +530,7 @@ export function GarageScreen() {
                   size={19}
                 />
                 <input
-                  className="h-[3.25rem] w-full rounded-2xl border border-border-default bg-bg-input py-3 pl-12 pr-4 text-base font-medium text-text-primary placeholder:text-text-muted"
+                  className="h-14 w-full rounded-2xl border border-border-default bg-bg-input py-3 pl-12 pr-4 text-base font-medium text-text-primary placeholder:text-text-muted"
                   inputMode="decimal"
                   min="0"
                   onChange={(event) =>
@@ -534,7 +551,7 @@ export function GarageScreen() {
               <legend className="text-[11px] font-bold tracking-[0.15em] text-text-muted">
                 FUEL UNIT PREFERENCE
               </legend>
-              <div className="mt-3 grid grid-cols-2 rounded-2xl border border-border-default bg-bg-input p-1">
+              <div className="mt-3 grid grid-cols-2 rounded-full border border-border-default bg-bg-input p-1">
                 {(
                   [
                     ["metric", "Metric · km & Litres"],
@@ -545,7 +562,7 @@ export function GarageScreen() {
                   return (
                     <button
                       aria-pressed={selected}
-                      className={`min-h-12 rounded-xl px-2 py-2 text-center text-[11px] font-bold leading-4 transition-all ${
+                      className={`min-h-12 rounded-full px-2 py-2 text-center text-[11px] font-bold leading-4 transition-all ${
                         selected
                           ? "bg-accent text-text-primary shadow-accent-glow"
                           : "text-text-secondary hover:text-text-primary"
@@ -562,9 +579,9 @@ export function GarageScreen() {
             </fieldset>
           </div>
 
-          <div className="mt-8 border-t border-border-default pt-5">
+          <div className="sticky bottom-0 -mx-6 mt-8 border-t border-border-default bg-bg-base/95 px-6 pb-5 pt-5 backdrop-blur-xl">
             <button
-              className="h-[3.25rem] w-full rounded-2xl bg-accent px-4 text-sm font-bold text-text-primary shadow-accent-glow transition-transform hover:brightness-110 active:scale-[0.98]"
+              className="h-14 w-full rounded-2xl bg-accent px-6 text-base font-bold text-text-primary shadow-[0_4px_20px_rgb(var(--color-accent)_/_0.35)] hover:brightness-110"
               type="submit"
             >
               {editingVehicle ? "Save changes" : "Add to garage"}

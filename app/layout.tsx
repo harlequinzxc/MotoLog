@@ -52,10 +52,14 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-title" content="MotoLog" />
       </head>
       <body>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed inset-x-0 top-0 z-0 h-[300px] bg-[radial-gradient(ellipse_at_top,_rgb(var(--color-accent)_/_0.08)_0%,_transparent_60%)]"
+        />
         <AppProvider>
           <ThemeProvider>
             <ServiceWorkerRegistration />
-            <div className="min-h-[100dvh] pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
+            <div className="relative z-10 min-h-[100dvh] pb-[calc(4.5rem+env(safe-area-inset-bottom))]">
               {children}
             </div>
             <BottomNav />
