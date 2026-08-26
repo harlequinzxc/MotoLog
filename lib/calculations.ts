@@ -1,3 +1,5 @@
+import type { FillUp, Vehicle } from "@/lib/types";
+
 export interface RangeBreakdown {
   mainRange: number;
   reserveRange: number;
@@ -57,5 +59,83 @@ export function calculateRangeBreakdown(
     mainRange: mainRange ?? 0,
     reserveRange: reserveRange ?? 0,
     totalRange,
+  };
+}
+
+export interface FillUpMetrics {
+  /** Distance since the immediately preceding fill-up, in kilometres. */
+  distance: number | null;
+  /** Economy in km/L. Partial fills deliberately return null. */
+  economy: number | null;
+}
+
+export interface FillUpMetricsInput {
+  existingFillUps: FillUp[];
+  fuelAdded: number;
+  isFullTank: boolean;
+  odometer: number;
+  vehicle: Vehicle;
+}
+
+/**
+ * Calculates the data attached to a newly logged fill-up.
+ *
+ * A partial fill cannot measure economy on its own. When the next full fill is
+ * logged, fuel from every partial since the preceding full fill is accumulated
+ * and divided into the full distance travelled over that same period.
+ */
+export function calculateFillUpMetrics({
+  existingFillUps,
+  fuelAdded,
+  isFullTank,
+  odometer,
+  vehicle,
+}: FillUpMetricsInput): FillUpMetrics {
+  const priorFillUps = existingFillUps
+    .filter(
+      (fillUp) =>
+        fillUp.vehicleId === vehicle.id &&
+        Number.isFinite(fillUp.odometer) &&
+        fillUp.odometer <= odometer,
+    )
+    .sort(
+      (first, second) =>
+        first.odometer - second.odometer || first.date.localeCompare(second.date),
+    );
+  const previousFillUp = priorFillUps[priorFillUps.length - 1];
+  const previousOdometer = previousFillUp?.odometer ?? vehicle.startingOdometer;
+  const distance =
+    Number.isFinite(odometer) && odometer >= previousOdometer
+      ? odometer - previousOdometer
+      : null;
+
+  if (!isFullTank) {
+    return { distance, economy: null };
+  }
+
+  let lastFullFillIndex = -1;
+  for (let index = priorFillUps.length - 1; index >= 0; index -= 1) {
+    if (priorFillUps[index].isFullTank) {
+      lastFullFillIndex = index;
+      break;
+    }
+  }
+  const economyAnchorOdometer =
+    lastFullFillIndex === -1
+      ? vehicle.startingOdometer
+      : priorFillUps[lastFullFillIndex].odometer;
+  const fuelSinceLastFull = priorFillUps
+    .slice(lastFullFillIndex + 1)
+    .reduce(
+      (totalFuel, fillUp) =>
+        Number.isFinite(fillUp.fuelAdded) && fillUp.fuelAdded > 0
+          ? totalFuel + fillUp.fuelAdded
+          : totalFuel,
+      fuelAdded,
+    );
+
+  return {
+    distance,
+    economy: calculateEconomy(odometer - economyAnchorOdometer, fuelSinceLastFull),
   };
 }
