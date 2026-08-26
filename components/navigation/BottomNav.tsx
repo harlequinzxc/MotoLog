@@ -92,7 +92,7 @@ export function BottomNav() {
           <div className="relative flex h-[4.5rem] flex-col items-center pt-11">
             <button
               aria-label="Log a fill-up"
-              className="absolute -top-4 grid size-14 place-items-center rounded-2xl bg-accent text-text-primary shadow-[0_4px_24px_rgb(var(--color-accent)_/_0.5),0_0_0_4px_rgb(var(--color-accent)_/_0.1)] transition-transform duration-150 hover:-translate-y-0.5"
+              className="absolute -top-4 grid size-14 place-items-center rounded-2xl bg-accent text-text-primary shadow-[0_4px_20px_rgb(var(--color-accent)_/_0.35),0_0_0_4px_rgb(var(--color-accent)_/_0.08)] transition-transform duration-150 hover:-translate-y-0.5"
               onClick={handleLogFill}
               title="Log a fill-up"
               type="button"

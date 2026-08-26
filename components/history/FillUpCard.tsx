@@ -40,10 +40,9 @@ function formatNumber(value: number, maximumFractionDigits = 1, minimumFractionD
 
 function dateParts(date: string) {
   const parsed = parseCalendarDate(date) ?? new Date(0);
-  return {
-    full: new Intl.DateTimeFormat(undefined, { day: "2-digit", month: "short", year: "numeric" }).format(parsed),
-    weekday: new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(parsed).toUpperCase(),
-  };
+  const weekday = new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(parsed);
+  const calendarDate = new Intl.DateTimeFormat(undefined, { day: "2-digit", month: "short", year: "numeric" }).format(parsed);
+  return { full: `${weekday} · ${calendarDate}` };
 }
 
 function EconomyIndicator({
@@ -114,12 +113,11 @@ export function FillUpCard({
   };
 
   return (
-    <article className={`rounded-2xl border bg-bg-card p-4 transition-colors ${isExpanded ? "border-accent/50" : "border-border-default"}`}>
+    <article className={`rounded-2xl border bg-bg-card p-4 shadow-[0_10px_28px_rgb(var(--color-accent)_/_0.04)] transition-colors ${isExpanded ? "border-accent/50 shadow-[0_10px_32px_rgb(var(--color-accent)_/_0.09)]" : "border-border-default"}`}>
       <div aria-expanded={isExpanded} aria-label={`Toggle fill-up from ${station}`} className="cursor-pointer" onClick={onToggle} onKeyDown={handleKeyDown} role="button" tabIndex={0}>
         <div className="flex gap-3">
-          <span className="flex size-12 shrink-0 flex-col items-center justify-center rounded-2xl border border-accent/20 bg-accent/10 text-accent">
-            <span className="text-[10px] font-bold uppercase tracking-[0.04em]">{date.weekday}</span>
-            <Fuel aria-hidden="true" size={16} className="mt-0.5" />
+          <span className="grid size-10 shrink-0 place-items-center rounded-full border border-accent/30 bg-accent/5 text-accent">
+            <Fuel aria-hidden="true" size={16} />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-3">

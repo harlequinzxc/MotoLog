@@ -171,3 +171,13 @@ select:focus-visible {
     animation-duration: 1ms;
   }
 }
+
+/* Keep the virtualized history feed app-like instead of showing desktop chrome. */
+.history-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.history-scroll::-webkit-scrollbar {
+  display: none;
+}

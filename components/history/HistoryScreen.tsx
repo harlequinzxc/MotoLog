@@ -123,6 +123,7 @@ interface HistoryVirtualListProps {
   onEdit: (fillUp: FillUp) => void;
   onRefresh: () => void;
   settings: ReturnType<typeof useAppContext>["settings"];
+  showVehicleName: boolean;
   sort: SortOption;
   vehicleNames: Map<string, string>;
   vehiclesById: Map<string, ReturnType<typeof useAppContext>["vehicles"][number]>;
@@ -141,6 +142,7 @@ function HistoryVirtualList({
   onEdit,
   onRefresh,
   settings,
+  showVehicleName,
   sort,
   vehicleNames,
   vehiclesById,
@@ -219,7 +221,7 @@ function HistoryVirtualList({
 
   return (
     <div
-      className="relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-8"
+      className="history-scroll relative min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-8"
       onScroll={handleScroll}
       onTouchEnd={handleTouchEnd}
       onTouchMove={handleTouchMove}
@@ -284,7 +286,7 @@ function HistoryVirtualList({
                   }
                   settings={settings}
                   vehicle={vehiclesById.get(row.fillUp.vehicleId)}
-                  vehicleName={vehicleNames.get(row.fillUp.vehicleId)}
+                  vehicleName={showVehicleName ? vehicleNames.get(row.fillUp.vehicleId) : undefined}
                 />
               </div>
             </div>
@@ -408,17 +410,17 @@ export function HistoryScreen() {
           </div>
         </header>
 
-        <div className="mt-4 grid grid-cols-3 gap-3">
+        <div className="mt-4 grid grid-cols-3 overflow-hidden rounded-2xl bg-[#1E1E1E] shadow-[0_8px_28px_rgb(var(--color-accent)_/_0.05)]">
           {[
             ["AVG", averageEconomy, "text-text-primary"],
-            ["BEST", bestEconomy, "text-success"],
-            ["WORST", worstEconomy, "text-reserve"],
-          ].map(([label, value, color]) => (
-            <div className="rounded-xl bg-bg-card px-3 py-3" key={label as string}>
+            ["BEST", bestEconomy, "text-[#86EFAC]"],
+            ["WORST", worstEconomy, "text-[#FDBA74]"],
+          ].map(([label, value, color], index) => (
+            <div className={`px-4 py-3 ${index === 1 ? "border-x border-border-default/70" : ""}`} key={label as string}>
               <p className={`font-mono text-[22px] font-bold tabular-nums ${color}`}>
                 {value === null ? "—" : formatEconomy(value as number, globalUnits).split(" ")[0]}
               </p>
-              <p className="mt-1 text-[10px] font-medium uppercase tracking-[0.05em] text-text-muted">{label} {globalUnits.economyLabel}</p>
+              <p className="mt-1 text-[9px] font-medium uppercase tracking-[0.05em] text-text-muted">{label} {globalUnits.economyLabel}</p>
             </div>
           ))}
         </div>
@@ -426,7 +428,7 @@ export function HistoryScreen() {
         <label className="relative mt-4 block">
           <Search aria-hidden="true" className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-muted" size={18} />
           <input
-            className="h-14 w-full rounded-2xl border border-border-default bg-bg-card py-3 pl-12 pr-4 text-[15px] font-medium text-text-primary placeholder:text-text-muted"
+            className="h-14 w-full rounded-2xl border border-border-default bg-bg-elevated py-3 pl-12 pr-4 text-[15px] font-medium text-text-primary placeholder:text-text-muted/80"
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search station, notes or cost..."
             type="search"
@@ -434,39 +436,41 @@ export function HistoryScreen() {
           />
         </label>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="mt-3 grid grid-cols-[auto_1fr_auto] items-center gap-2">
           <select
             aria-label="Time period"
-            className="h-9 rounded-full border border-border-default bg-bg-card px-3 text-[13px] font-medium text-text-secondary"
+            className="h-9 min-w-0 rounded-full border border-border-default bg-bg-elevated px-3 text-[13px] font-medium text-text-secondary"
             onChange={(event) => setTimePeriod(event.target.value as TimePeriod)}
             value={timePeriod}
           >
             <option value="all">All time</option>
-            <option value="30-days">Last 30 days</option>
-            <option value="90-days">Last 90 days</option>
+            <option value="30-days">30 days</option>
+            <option value="90-days">90 days</option>
             <option value="this-year">{new Date().getFullYear()}</option>
           </select>
-          {([['all', 'All'], ['full', 'Full'], ['partial', 'Partial']] as const).map(([type, label]) => (
-            <button
-              className={`h-9 rounded-full px-4 text-[13px] font-medium ${fillType === type ? "bg-accent text-text-primary shadow-accent-glow" : "bg-bg-card text-text-muted"}`}
-              key={type}
-              onClick={() => setFillType(type)}
-              type="button"
-            >
-              {label}
-            </button>
-          ))}
-          <span className="relative ml-auto">
+          <div className="grid grid-cols-3 rounded-full bg-[#1E1E1E] p-1">
+            {([['all', 'All'], ['full', 'Full'], ['partial', 'Partial']] as const).map(([type, label]) => (
+              <button
+                className={`h-7 rounded-full px-2 text-[12px] font-medium ${fillType === type ? "bg-accent/15 text-accent" : "text-text-muted"}`}
+                key={type}
+                onClick={() => setFillType(type)}
+                type="button"
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <span className="relative min-w-0">
             <select
               aria-label="Sort history"
-              className="h-9 appearance-none rounded-full border border-border-default bg-bg-card py-0 pl-3 pr-8 text-[13px] font-medium text-text-secondary"
+              className="h-9 w-full appearance-none rounded-full border border-border-default bg-bg-elevated py-0 pl-3 pr-8 text-[13px] font-medium text-text-secondary"
               onChange={(event) => setSort(event.target.value as SortOption)}
               value={sort}
             >
               <option value="newest">↓ Newest</option>
               <option value="oldest">↑ Oldest</option>
-              <option value="best-economy">Best efficiency</option>
-              <option value="highest-cost">Highest cost</option>
+              <option value="best-economy">Best</option>
+              <option value="highest-cost">Cost</option>
             </select>
             <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-text-muted" size={14} />
           </span>
@@ -500,6 +504,7 @@ export function HistoryScreen() {
           onEdit={(fillUp) => setEditingFillUpId(fillUp.id)}
           onRefresh={() => setRefreshVersion((version) => version + 1)}
           settings={settings}
+          showVehicleName={selectedVehicleId === "all"}
           sort={sort}
           vehicleNames={vehicleNames}
           vehiclesById={vehiclesById}
