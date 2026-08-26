@@ -35,7 +35,9 @@ Chrome's native installation dialog.
 
 ## CSV backups
 
-CSV exports use a simple settings row followed by vehicle and fill-up rows, with
-no internal IDs or timestamps. To start from sample data, load demo data in the
-Garage, then export it from Settings. Edit the settings row first; its currency
-and unit fields determine how vehicle and fill-up values are read on import.
+CSV exports use one standardized header with `settings`, `vehicle`, and
+`fill_up` rows, with no internal IDs or timestamps. Dates export as `DD/MM/YYYY`;
+amounts are cleaned for spreadsheet editing; and booleans export as `TRUE` or
+`FALSE`. To start from sample data, load demo data in Garage, then export it
+from Settings. The settings row preserves the selected currency, units, and
+accent theme used when values are imported.

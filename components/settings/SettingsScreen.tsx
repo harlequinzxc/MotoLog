@@ -353,7 +353,7 @@ export function SettingsScreen() {
 
         <SettingsSection title="BACKUP & RESTORE">
           <p className="text-sm leading-6 text-text-secondary">
-            Export uses simple settings, vehicle, and fill-up rows — no internal IDs or timestamps. Load demo data in Garage first if you want a ready-made spreadsheet to edit, then export it here.
+            Export uses one simple settings, vehicle, and fill-up CSV — no internal IDs or timestamps. Dates use DD/MM/YYYY, and all amounts are cleaned for spreadsheet editing.
           </p>
           <div className="mt-5 grid grid-cols-2 gap-3">
             <button

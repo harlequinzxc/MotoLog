@@ -1,4 +1,4 @@
-import { toCalendarDate, parseCalendarDate } from "@/lib/date";
+import { toCalendarDate, parseCalendarDate, toCsvDate } from "@/lib/date";
 import { createId } from "@/lib/ids";
 import {
   fromKilometres,
@@ -159,8 +159,31 @@ function tableFromCsv(source: string) {
 }
 
 function toNumber(value: string, fallback = 0) {
-  const number = Number(value);
+  const raw = value.trim();
+  if (!raw) {
+    return fallback;
+  }
+
+  // Accept spreadsheet values such as "$17.64", "1,234.50", and "17,64".
+  const stripped = raw.replace(/[^0-9,.-]/g, "");
+  const lastComma = stripped.lastIndexOf(",");
+  const lastDot = stripped.lastIndexOf(".");
+  const normalized =
+    lastComma > lastDot
+      ? stripped.replace(/\./g, "").replace(",", ".")
+      : stripped.replace(/,/g, "");
+  const number = Number(normalized);
   return Number.isFinite(number) ? number : fallback;
+}
+
+function formatNumeric(value: number, decimals?: number) {
+  if (!Number.isFinite(value)) {
+    return decimals === undefined ? "0" : (0).toFixed(decimals);
+  }
+
+  return decimals === undefined
+    ? String(Number(value.toFixed(6)))
+    : value.toFixed(decimals);
 }
 
 function toOptionalNumber(value: string) {
@@ -191,6 +214,17 @@ function toFullTank(value: string) {
     "✓",
     "x",
   ].includes(normalized);
+}
+
+function cleanStationName(value: string) {
+  const normalized = value.replace(/\s+/g, " ").trim();
+  const aliases: Record<string, string> = {
+    "esso pasi": "Esso Pasir Ris",
+    "esso pasir": "Esso Pasir Ris",
+    "esso pasir ris": "Esso Pasir Ris",
+  };
+
+  return aliases[normalized.toLocaleLowerCase()] ?? normalized;
 }
 
 function isDistanceUnit(value: string): value is DistanceUnit {
@@ -254,25 +288,24 @@ export function exportAppDataToCsv(data: AppData) {
     vehicle_name: vehicle.name,
     vehicle_type: vehicle.type,
     year: vehicle.year?.toString() ?? "",
-    tank_capacity: fromLitres(vehicle.tankCapacity, units.volume).toString(),
-    reserve: fromLitres(vehicle.reserve, units.volume).toString(),
-    starting_odometer: fromKilometres(
-      vehicle.startingOdometer,
-      units.distance,
-    ).toString(),
-    active: String(vehicle.isActive),
+    tank_capacity: formatNumeric(fromLitres(vehicle.tankCapacity, units.volume), 2),
+    reserve: formatNumeric(fromLitres(vehicle.reserve, units.volume), 2),
+    starting_odometer: formatNumeric(
+      fromKilometres(vehicle.startingOdometer, units.distance),
+    ),
+    active: vehicle.isActive ? "TRUE" : "FALSE",
   }));
   const fillUpRows = data.fillUps
     .filter((fillUp) => keysByVehicleId.has(fillUp.vehicleId))
     .map<Row>((fillUp) => ({
       record_type: "fill_up",
       vehicle_key: keysByVehicleId.get(fillUp.vehicleId) ?? "",
-      date: fillUp.date,
-      odometer: fromKilometres(fillUp.odometer, units.distance).toString(),
-      fuel_added: fromLitres(fillUp.fuelAdded, units.volume).toString(),
-      total_cost: fillUp.totalCost.toString(),
-      full_tank: String(fillUp.isFullTank),
-      station: fillUp.station,
+      date: toCsvDate(fillUp.date),
+      odometer: formatNumeric(fromKilometres(fillUp.odometer, units.distance)),
+      fuel_added: formatNumeric(fromLitres(fillUp.fuelAdded, units.volume), 2),
+      total_cost: formatNumeric(fillUp.totalCost, 2),
+      full_tank: fillUp.isFullTank ? "TRUE" : "FALSE",
+      station: cleanStationName(fillUp.station),
       notes: fillUp.notes,
     }));
 
@@ -284,8 +317,76 @@ export function exportAppDataToCsv(data: AppData) {
   ].join("\r\n");
 }
 
+function normalizeSimpleFillUpDates(rows: Row[], importedAt: string) {
+  const groups = new Map<string, Array<{ index: number; row: Row }>>();
+
+  rows.forEach((row, index) => {
+    if (row.record_type !== "fill_up") {
+      return;
+    }
+
+    const key = row.vehicle_key.trim() || "unassigned";
+    const group = groups.get(key) ?? [];
+    group.push({ index, row });
+    groups.set(key, group);
+  });
+
+  groups.forEach((entries) => {
+    const validDates = entries
+      .map((entry, position) => ({ ...entry, position, date: parseCalendarDate(entry.row.date) }))
+      .filter((entry): entry is typeof entry & { date: Date } => entry.date !== null);
+
+    entries.forEach((entry, position) => {
+      if (parseCalendarDate(entry.row.date)) {
+        entry.row.date = toCalendarDate(entry.row.date, new Date(importedAt));
+        return;
+      }
+
+      const previous = [...validDates].reverse().find((candidate) => candidate.position < position);
+      const next = validDates.find((candidate) => candidate.position > position);
+      let inferred: Date;
+
+      if (previous && next) {
+        const previousOdometer = toNumber(previous.row.odometer, Number.NaN);
+        const currentOdometer = toNumber(entry.row.odometer, Number.NaN);
+        const nextOdometer = toNumber(next.row.odometer, Number.NaN);
+        const positionalRatio = (position - previous.position) / (next.position - previous.position);
+        const odometerRatio =
+          Number.isFinite(previousOdometer) &&
+          Number.isFinite(currentOdometer) &&
+          Number.isFinite(nextOdometer) &&
+          nextOdometer > previousOdometer
+            ? Math.min(
+                Math.max(
+                  (currentOdometer - previousOdometer) /
+                    (nextOdometer - previousOdometer),
+                  0,
+                ),
+                1,
+              )
+            : positionalRatio;
+        inferred = new Date(
+          previous.date.getTime() +
+            (next.date.getTime() - previous.date.getTime()) * odometerRatio,
+        );
+      } else if (previous) {
+        inferred = new Date(previous.date.getTime() + (position - previous.position) * 7 * 86_400_000);
+      } else if (next) {
+        inferred = new Date(next.date.getTime() - (next.position - position) * 7 * 86_400_000);
+      } else {
+        inferred = new Date(new Date(importedAt).getTime() + position * 7 * 86_400_000);
+      }
+
+      entry.row.date = toCalendarDate(inferred.toISOString(), new Date(importedAt));
+    });
+  });
+
+  return rows;
+}
+
 function importSimpleData(rows: Row[]): AppData {
   const importedAt = new Date().toISOString();
+  normalizeSimpleFillUpDates(rows, importedAt);
   const settingsRow = rows.find((row) => row.record_type === "settings");
   const settings = settingsRow ? importSettings(settingsRow) : { ...DEFAULT_APP_SETTINGS };
   const units = resolveUnits(settings);
@@ -345,7 +446,7 @@ function importSimpleData(rows: Row[]): AppData {
         fuelAdded: Math.max(toLitres(toNumber(row.fuel_added), units.volume), 0),
         totalCost: Math.max(toNumber(row.total_cost), 0),
         isFullTank: toFullTank(row.full_tank),
-        station: row.station,
+        station: cleanStationName(row.station),
         notes: row.notes,
         // Recalculated by AppContext after the replacement is applied.
         distance: null,
@@ -413,7 +514,7 @@ function importLegacyData(rows: Row[]): AppData {
         fuelAdded: Math.max(toNumber(row.fuel_added_l), 0),
         totalCost: Math.max(toNumber(row.total_cost), 0),
         isFullTank: toFullTank(row.is_full_tank),
-        station: row.station,
+        station: cleanStationName(row.station),
         notes: row.notes,
         distance: toOptionalNumber(row.distance_km),
         economy: toOptionalNumber(row.economy_km_l),

@@ -45,11 +45,9 @@ export function parseCalendarDate(value: string) {
     const first = Number(localized[1]);
     const second = Number(localized[2]);
     const year = Number(localized[3]);
-    // Prefer month/day when ambiguous because that is Excel's default CSV form;
-    // unambiguous 31/12/2026-style values remain day/month.
-    const month = first > 12 ? second : first;
-    const day = first > 12 ? first : second;
-    return dateFromParts(year, month, day);
+    // MotoLog's editable CSV contract is DD/MM/YYYY. Ambiguous spreadsheet
+    // values therefore use day/month, while ISO dates above remain unambiguous.
+    return dateFromParts(year, second, first);
   }
 
   const parsed = new Date(source);
@@ -62,4 +60,12 @@ export function toCalendarDate(value: string, fallback = new Date()) {
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const day = String(date.getUTCDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+/** Formats the backend CSV's human-editable DD/MM/YYYY date convention. */
+export function toCsvDate(value: string, fallback = new Date()) {
+  const date = parseCalendarDate(value) ?? fallback;
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  return `${day}/${month}/${date.getUTCFullYear()}`;
 }
