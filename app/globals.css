@@ -4,7 +4,8 @@
 
 :root {
   --accent: #ff5502;
-  --color-accent: 255, 85, 2;
+  /* Space-separated channels keep Tailwind opacity utilities valid. */
+  --color-accent: 255 85 2;
   --background: #0d0d0e;
   --foreground: #f5f5f5;
   color-scheme: dark;

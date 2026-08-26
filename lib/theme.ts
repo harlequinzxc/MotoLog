@@ -18,27 +18,27 @@ export const ACCENT_THEMES = {
   orange: {
     label: "Blaze Orange",
     hex: "#FF5502",
-    rgb: "255, 85, 2",
+    rgb: "255 85 2",
   },
   coral: {
     label: "Coral Red",
     hex: "#FF4D5A",
-    rgb: "255, 77, 90",
+    rgb: "255 77 90",
   },
   gold: {
     label: "Track Gold",
     hex: "#F6B73C",
-    rgb: "246, 183, 60",
+    rgb: "246 183 60",
   },
   mint: {
     label: "Signal Mint",
     hex: "#31C48D",
-    rgb: "49, 196, 141",
+    rgb: "49 196 141",
   },
   blue: {
     label: "Apex Blue",
     hex: "#4198FF",
-    rgb: "65, 152, 255",
+    rgb: "65 152 255",
   },
 } as const;
 
