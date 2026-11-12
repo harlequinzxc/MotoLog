@@ -141,6 +141,7 @@ Every function creation, bug fix, feature addition, or refactor must follow stri
 - **PATCH (`x.x.X`):** Bug fixes, minor styling tweaks, typo corrections, and small internal refactors.
 - **MINOR (`x.X.x`):** Backward-compatible new features, new UI components, and functional enhancements.
 - **MAJOR (`X.x.x`):** Breaking architectural changes or non-backward-compatible storage/API schema changes.
+- **Structured In-App Changelog Sync:** Maintain a single typed release-notes data source (`src/data/changelog.ts`) synchronized with `package.json`. Whenever bumping a MINOR or MAJOR version—or a notable PATCH fix—prepend a new release entry (`version`, `date`, `title`, `highlights[]`) so both the Settings Changelog view and the automatic “What’s New” modal stay up to date.
 - Every commit message must explicitly state the SemVer scope and version bump, for example:
   - `fix(ui): resolve bottom sheet safe-area padding v1.0.2`
   - `feat(export): add CSV download utility v1.1.0`
