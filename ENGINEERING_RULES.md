@@ -14,6 +14,30 @@ These standards apply across every file and action in this repository. Violation
 
 ---
 
+## 1A. Conversational Modes & Pre-Execution Approval Gates
+
+### Chat-Only Override (`DO NOT CODE, JUST CHAT WITH ME`)
+
+Whenever the user includes `DO NOT CODE, JUST CHAT WITH ME`—or asks a purely exploratory question without requesting edits—do not create, modify, or delete files, and do not run Git commits or pushes. Respond strictly with conversational analysis, ideas, or architectural advice.
+
+### Clarification & Step-by-Step Plan Gate
+
+Whenever a request is ambiguous, touches core architecture or schemas, or the user asks for clarifying questions or an implementation plan before starting, stop before editing files.
+
+Respond with:
+
+1. **Understanding & Rationale:** Briefly confirm the goal, explain why the proposed approach will work, and identify edge cases or prerequisites needed from the user.
+2. **Clarifying Questions:** Ask targeted questions that eliminate bugs or guesswork, where needed.
+3. **Step-by-Step Execution Plan:** List the exact files to create or modify and the planned SemVer bump.
+
+Wait for explicit user approval before writing code or pushing to GitHub.
+
+### Candid Project Audit Mode
+
+Whenever the user asks for a project rating or critique, objectively score the app from `1–10` across **Idea**, **Features**, and **User Experience**. Explain the reasoning candidly and propose 3–5 high-impact, actionable upgrades that would make it a `10/10` product.
+
+---
+
 ## 2. Standardized UI Component Architecture (Design System)
 
 Never write ad-hoc, one-off Tailwind styling for recurring elements. Build and strictly reuse centralized UI primitives inside `src/components/ui/`.
