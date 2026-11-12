@@ -1,17 +1,3 @@
-interface AppLogoProps {
-  className?: string;
-  size?: number;
-}
-
-/** Text-free brand emblem rendered from the generated PWA asset. */
-export function AppLogo({ className, size = 40 }: AppLogoProps) {
-  return (
-    <img
-      alt="MotoLog"
-      className={className}
-      height={size}
-      src="/favicon.svg"
-      width={size}
-    />
-  );
+export function AppLogo({ size = 40 }: { size?: number }) {
+  return <img alt="MotoLog" className="rounded-xl shadow-crimson" height={size} src="/favicon.svg" width={size} />;
 }

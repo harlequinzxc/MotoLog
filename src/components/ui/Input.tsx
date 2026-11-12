@@ -2,10 +2,10 @@ import { forwardRef, type InputHTMLAttributes, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  endAdornment?: ReactNode;
   error?: string;
   label: string;
   startAdornment?: ReactNode;
+  endAdornment?: ReactNode;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
@@ -18,19 +18,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
       <span className="text-xs font-semibold tracking-wide text-zinc-600 dark:text-zinc-400">{label}</span>
       <span className="relative block">
         {startAdornment ? <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">{startAdornment}</span> : null}
-        <input
-          {...props}
-          className={cn(
-            "h-12 w-full rounded-xl border border-zinc-300 bg-white px-3 text-base text-zinc-900 placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-600",
-            startAdornment && "pl-10",
-            endAdornment && "pr-12",
-            error && "border-rose-500 focus-visible:ring-rose-500",
-            className
-          )}
-          id={inputId}
-          ref={ref}
-        />
-        {endAdornment ? <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-zinc-500">{endAdornment}</span> : null}
+        <input {...props} className={cn("h-12 w-full rounded-xl border border-zinc-300 bg-white px-3 text-base text-zinc-900 placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-600", startAdornment && "pl-10", endAdornment && "pr-12", error && "border-rose-500", className)} id={inputId} ref={ref} />
+        {endAdornment ? <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-zinc-500">{endAdornment}</span> : null}
       </span>
       {error ? <span className="text-xs text-rose-600 dark:text-rose-400">{error}</span> : null}
     </label>

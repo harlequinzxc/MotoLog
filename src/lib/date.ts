@@ -5,35 +5,15 @@ export function localDateInputValue(date = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
-export function localDateToIso(dateValue: string) {
-  const [year, month, day] = dateValue.split("-").map(Number);
-  const date = new Date(year, month - 1, day, 12, 0, 0);
-  return date.toISOString();
+export function localDateToIso(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day, 12).toISOString();
 }
 
-export function addDaysIso(days: number, source = new Date()) {
-  const date = new Date(source);
-  date.setDate(date.getDate() + days);
-  return date.toISOString();
-}
-
-export function addMonthsIso(months: number, source = new Date()) {
-  const date = new Date(source);
-  date.setMonth(date.getMonth() + months);
-  return date.toISOString();
-}
-
-export function formatLocalDate(isoTimestamp: string) {
+export function formatLocalDate(value: string) {
   return new Intl.DateTimeFormat(undefined, {
     day: "numeric",
     month: "short",
     year: "numeric"
-  }).format(new Date(isoTimestamp));
-}
-
-export function daysUntil(isoTimestamp: string, now = new Date()) {
-  const target = new Date(isoTimestamp);
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const end = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime();
-  return Math.round((end - start) / 86_400_000);
+  }).format(new Date(value));
 }

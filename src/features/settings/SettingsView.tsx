@@ -1,47 +1,23 @@
-import { Moon, Settings2, Sparkles, Sun } from "lucide-react";
+import { Moon, RotateCcw, Sparkles, Sun, Trash2 } from "lucide-react";
+import { useState } from "react";
 
+import { BottomSheet } from "@/components/ui/BottomSheet";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { CHANGELOG } from "@/data/changelog";
 import { Toggle } from "@/components/ui/Toggle";
-import { useApp } from "@/context/AppProvider";
 import { useToast } from "@/components/ui/ToastProvider";
+import { CHANGELOG } from "@/data/changelog";
+import { useApp } from "@/context/AppProvider";
 
 export function SettingsView() {
-  const { settings, updateThemeMode } = useApp();
+  const { clearAllData, restoreSnapshot, seedSampleData, settings, updateSettings } = useApp();
   const { showToast } = useToast();
-  const isDark = settings?.themeMode !== "light";
-  const changeTheme = async (checked: boolean) => {
-    await updateThemeMode(checked ? "dark" : "light");
-    showToast({ message: `${checked ? "Dark" : "Light"} theme enabled.`, tone: "success" });
-  };
-
-  return (
-    <div className="grid gap-5">
-      <div>
-        <p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">APP SETTINGS</p>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">MotoLog preferences</h1>
-      </div>
-      <Card className="flex items-center gap-3">
-        {isDark ? <Moon aria-hidden="true" className="size-5 text-red-500" strokeWidth={2} /> : <Sun aria-hidden="true" className="size-5 text-red-500" strokeWidth={2} />}
-        <div className="flex-1">
-          <p className="font-semibold text-zinc-900 dark:text-zinc-50">Dark mode</p>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Switch between zinc light and obsidian dark surfaces.</p>
-        </div>
-        <Toggle checked={isDark} label="Toggle dark mode" onChange={(checked) => void changeTheme(checked)} />
-      </Card>
-      <Card className="flex items-center gap-3">
-        <Settings2 aria-hidden="true" className="size-5 text-zinc-500" strokeWidth={2} />
-        <p className="text-sm text-zinc-600 dark:text-zinc-400">More reporting, backup, and preference controls arrive in the next slice.</p>
-      </Card>
-      <Card>
-        <div className="flex items-center gap-2">
-          <Sparkles aria-hidden="true" className="size-5 text-red-500" strokeWidth={2} />
-          <p className="font-semibold text-zinc-900 dark:text-zinc-50">Changelog · {CHANGELOG[0].version}</p>
-        </div>
-        <ul className="mt-3 grid gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-          {CHANGELOG[0].highlights.map((highlight) => <li key={highlight}>• {highlight}</li>)}
-        </ul>
-      </Card>
-    </div>
-  );
+  const [clearOpen, setClearOpen] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const dark = settings?.themeMode !== "light";
+  const unit = settings?.efficiencyUnit ?? "km-per-litre";
+  const seed = async () => { setSeeding(true); try { await seedSampleData(); showToast({ message: "Sample data loaded.", tone: "success" }); } catch (caughtError) { showToast({ message: caughtError instanceof Error ? caughtError.message : "Unable to load sample data.", tone: "error" }); } finally { setSeeding(false); } };
+  const clear = async () => { setClearing(true); try { const snapshot = await clearAllData(); showToast({ actionLabel: "Undo", message: "All local data cleared.", onAction: () => restoreSnapshot(snapshot), tone: "success" }); setClearOpen(false); } finally { setClearing(false); } };
+  return <div className="grid gap-5"><div><p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">SETTINGS</p><h1 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">App preferences</h1></div><Card className="flex items-center gap-3">{dark ? <Moon aria-hidden="true" className="size-5 text-red-500" strokeWidth={2} /> : <Sun aria-hidden="true" className="size-5 text-red-500" strokeWidth={2} />}<div className="flex-1"><p className="font-semibold text-zinc-900 dark:text-zinc-50">Dark Black & Red</p><p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Switch app surfaces between dark and light.</p></div><Toggle checked={dark} label="Toggle dark mode" onChange={(checked) => void updateSettings({ themeMode: checked ? "dark" : "light" })} /></Card><Card><p className="font-semibold text-zinc-900 dark:text-zinc-50">Efficiency unit</p><div className="mt-3 grid grid-cols-2 rounded-2xl bg-zinc-100 p-1 dark:bg-zinc-800"><button aria-pressed={unit === "km-per-litre"} className={`min-h-[44px] rounded-xl text-sm font-semibold ${unit === "km-per-litre" ? "bg-red-600 text-white dark:bg-red-500" : "text-zinc-500 dark:text-zinc-400"}`} onClick={() => void updateSettings({ efficiencyUnit: "km-per-litre" })} type="button">km/L</button><button aria-pressed={unit === "litres-per-100km"} className={`min-h-[44px] rounded-xl text-sm font-semibold ${unit === "litres-per-100km" ? "bg-red-600 text-white dark:bg-red-500" : "text-zinc-500 dark:text-zinc-400"}`} onClick={() => void updateSettings({ efficiencyUnit: "litres-per-100km" })} type="button">L/100km</button></div></Card><div className="grid grid-cols-2 gap-3"><Button loading={seeding} onClick={seed} size="lg" variant="secondary"><RotateCcw className="size-5" strokeWidth={2} />Sample Data</Button><Button onClick={() => setClearOpen(true)} size="lg" variant="danger"><Trash2 className="size-5" strokeWidth={2} />Clear Data</Button></div><Card><div className="flex items-center gap-2"><Sparkles aria-hidden="true" className="size-5 text-red-500" strokeWidth={2} /><p className="font-semibold text-zinc-900 dark:text-zinc-50">Changelog · {CHANGELOG[0].version}</p></div><ul className="mt-3 grid gap-2 text-sm text-zinc-600 dark:text-zinc-400">{CHANGELOG[0].highlights.map((highlight) => <li key={highlight}>• {highlight}</li>)}</ul></Card><BottomSheet footer={<Button className="w-full" loading={clearing} onClick={clear} size="lg" variant="danger">Clear All Data</Button>} onClose={() => setClearOpen(false)} open={clearOpen} title="Clear local data?"><p className="pb-4 text-sm leading-6 text-zinc-600 dark:text-zinc-400">This removes every local vehicle and fill-up log. Use Undo in the confirmation toast to restore the in-memory snapshot.</p></BottomSheet></div>;
 }
