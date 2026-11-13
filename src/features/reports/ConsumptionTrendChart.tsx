@@ -1,10 +1,12 @@
-import { ChartNoAxesCombined } from "lucide-react";
+import { Fuel } from "lucide-react";
 
+import { EmptyState } from "@/components/ui/EmptyState";
 import { displayEfficiencyValue, formatDisplayedEfficiency } from "@/lib/units";
 import type { ConsumptionUnit } from "@/types";
 import type { ConsumptionPoint } from "@/utils/reportMetrics";
 
 interface ConsumptionTrendChartProps {
+  onLogFuel: () => void;
   points: ConsumptionPoint[];
   unit: ConsumptionUnit;
 }
@@ -22,24 +24,17 @@ function formatShortDate(iso: string) {
   return new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" }).format(new Date(iso));
 }
 
-function EmptyTrend() {
-  return (
-    <div className="grid min-h-52 place-items-center py-6 text-center">
-      <div>
-        <ChartNoAxesCombined aria-hidden="true" className="mx-auto size-8 text-red-500" strokeWidth={2} />
-        <p className="mt-3 text-sm text-zinc-600 dark:text-zinc-400">Complete a full-tank interval to plot fuel efficiency here.</p>
-      </div>
-    </div>
-  );
+function EmptyTrend({ onLogFuel }: { onLogFuel: () => void }) {
+  return <EmptyState actionLabel="Log a Fill-Up" description="Complete a full-tank interval to plot fuel efficiency here." icon={Fuel} onAction={onLogFuel} title="No consumption trend yet" />;
 }
 
-export function ConsumptionTrendChart({ points, unit }: ConsumptionTrendChartProps) {
+export function ConsumptionTrendChart({ onLogFuel, points, unit }: ConsumptionTrendChartProps) {
   const displayPoints = points.flatMap<DisplayPoint>((point) => {
     const value = displayEfficiencyValue(point.efficiencyKmPerLitre, unit);
     return value === null ? [] : [{ ...point, value }];
   });
 
-  if (displayPoints.length === 0) return <EmptyTrend />;
+  if (displayPoints.length === 0) return <EmptyTrend onLogFuel={onLogFuel} />;
 
   const values = displayPoints.map((point) => point.value);
   const minimum = Math.min(...values);
@@ -58,7 +53,7 @@ export function ConsumptionTrendChart({ points, unit }: ConsumptionTrendChartPro
   const path = positions.map((position, index) => `${index === 0 ? "M" : "L"} ${position.x} ${position.y}`).join(" ");
 
   return (
-    <div className="grid gap-3">
+    <div className="motion-chart-enter grid gap-3" data-motion="consumption-chart" key={displayPoints.map((point) => `${point.id}-${point.value}`).join("-")}>
       <div className="overflow-x-auto">
         <svg aria-label="Fuel efficiency trend" className="h-auto min-w-[300px] w-full" role="img" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
           <line x1={HORIZONTAL_PADDING} x2={WIDTH - HORIZONTAL_PADDING} y1={VERTICAL_PADDING} y2={VERTICAL_PADDING} stroke="currentColor" strokeDasharray="4 4" className="text-zinc-200 dark:text-zinc-800" />

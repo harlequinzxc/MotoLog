@@ -2,11 +2,98 @@
 @tailwind components;
 @tailwind utilities;
 
-:root { background: #fafafa; color: #18181b; color-scheme: light; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+:root {
+  --motion-fast: 160ms;
+  --motion-standard: 200ms;
+  --motion-sheet: 280ms;
+  --motion-ease: cubic-bezier(0.32, 0.72, 0, 1);
+  background: #fafafa;
+  color: #18181b;
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
 :root.dark { background: #09090b; color: #fafafa; color-scheme: dark; }
 * { box-sizing: border-box; }
 html, body, #root { min-height: 100dvh; margin: 0; }
 body { overflow-x: hidden; }
 button, input, select { font: inherit; }
 .tabular-nums { font-variant-numeric: tabular-nums; }
-@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: 1ms !important; scroll-behavior: auto !important; transition-duration: 1ms !important; } }
+
+.motion-press {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform var(--motion-fast) ease-out, opacity var(--motion-fast) ease-out;
+}
+
+.motion-press:not(:disabled):active { transform: scale(0.98); }
+.motion-toggle-thumb { transition: transform var(--motion-fast) ease-out; }
+.motion-tab-indicator {
+  opacity: 0;
+  transform: scaleX(0.6);
+  transition: transform var(--motion-fast) ease-out, opacity var(--motion-fast) ease-out;
+}
+.motion-tab-indicator[data-state="open"] { opacity: 1; transform: scaleX(1); }
+.motion-sheet-backdrop {
+  opacity: 0;
+  transition: opacity var(--motion-sheet) var(--motion-ease);
+}
+.motion-sheet-backdrop[data-state="open"] { opacity: 1; }
+.motion-sheet-panel {
+  opacity: 0;
+  transform: translateY(1.25rem) scale(0.985);
+  transition: transform var(--motion-sheet) var(--motion-ease), opacity var(--motion-sheet) var(--motion-ease);
+}
+.motion-sheet-panel[data-state="open"] { opacity: 1; transform: translateY(0) scale(1); }
+.motion-toast {
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition: transform var(--motion-fast) ease-out, opacity var(--motion-fast) ease-out;
+}
+.motion-toast[data-state="open"] { opacity: 1; transform: translateY(0); }
+.motion-swap {
+  opacity: 0;
+  transform: translateY(0.5rem);
+  transition: transform var(--motion-fast) ease-out, opacity var(--motion-fast) ease-out;
+}
+.motion-swap[data-state="open"] { opacity: 1; transform: translateY(0); }
+.motion-progress { transition: clip-path var(--motion-standard) ease-out; }
+.motion-list-item { animation: motion-list-in var(--motion-fast) ease-out both; }
+.motion-chart-enter { animation: motion-chart-in var(--motion-standard) ease-out both; }
+
+@keyframes motion-list-in {
+  from { opacity: 0; transform: translateY(0.5rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes motion-chart-in {
+  from { opacity: 0; transform: translateY(0.4rem) scale(0.99); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+html[data-reduced-motion="true"] {
+  --motion-fast: 0.01ms;
+  --motion-standard: 0.01ms;
+  --motion-sheet: 0.01ms;
+}
+
+html[data-reduced-motion="true"] [data-motion],
+html[data-reduced-motion="true"] .motion-list-item,
+html[data-reduced-motion="true"] .motion-chart-enter,
+html[data-reduced-motion="true"] .motion-press {
+  animation: none !important;
+  transform: none !important;
+  transition-duration: 0.01ms !important;
+}
+
+html[data-reduced-motion="true"] .motion-press:not(:disabled):active { opacity: 0.9; }
+
+@media (prefers-reduced-motion: reduce) {
+  html:not([data-reduced-motion]) [data-motion],
+  html:not([data-reduced-motion]) .motion-list-item,
+  html:not([data-reduced-motion]) .motion-chart-enter,
+  html:not([data-reduced-motion]) .motion-press {
+    animation: none !important;
+    transform: none !important;
+    transition-duration: 0.01ms !important;
+  }
+}

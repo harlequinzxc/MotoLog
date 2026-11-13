@@ -15,7 +15,7 @@ export interface ServiceItem { id: string; vehicleId: string; title: string; isC
 export interface ServiceVisit { id: string; vehicleId: string; occurredAt: string; odometerKm: number; totalCost: number; currencyCode: string; notes: string; createdAt: string; updatedAt: string; }
 export interface ServiceVisitItem { id: string; visitId: string; serviceItemId: string; createdAt: string; }
 export interface ExpenseRecord { id: string; vehicleId: string; occurredAt: string; category: ExpenseCategory; totalCost: number; currencyCode: string; odometerKm: number | null; notes: string; createdAt: string; updatedAt: string; }
-export interface AppSettings { id: "app"; activeVehicleId: string | null; themeMode: ThemeMode; lastSeenVersion: string | null; createdAt: string; updatedAt: string; }
+export interface AppSettings { id: "app"; activeVehicleId: string | null; themeMode: ThemeMode; reducedMotion: boolean | null; lastSeenVersion: string | null; createdAt: string; updatedAt: string; }
 
 export interface VehicleInput { name: string; type: VehicleType; fuelType: FuelType; tankCapacityLitres: number; currentOdometerKm: number; distanceUnit: DistanceUnit; volumeUnit: VolumeUnit; consumptionUnit: ConsumptionUnit; currencyCode: string; }
 export interface FuelLogInput { occurredAt: string; odometerKm: number; activeFuel: ActiveFuel; mode: FillUpMode; pricePerLitre: number | null; volumeLitres: number | null; totalCost: number | null; currencyCode: string; stationName: string; notes: string; }

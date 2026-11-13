@@ -1,4 +1,4 @@
-import { CarFront, Check, ChevronRight, History, Moon, RotateCcw, Sparkles, Sun, Trash2 } from "lucide-react";
+import { Accessibility, CarFront, Check, ChevronRight, History, Moon, RotateCcw, Sparkles, Sun, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { ChangelogSheet } from "@/components/changelog/ChangelogSheet";
@@ -16,11 +16,12 @@ interface SettingsViewProps {
 }
 
 export function SettingsView({ onOpenGarage }: SettingsViewProps) {
-  const { clearAllData, restoreSnapshot, seedSampleData, settings, updateSettings, vehicles } = useApp();
+  const { clearAllData, reducedMotion, restoreSnapshot, seedSampleData, settings, updateSettings, vehicles } = useApp();
   const { showToast } = useToast();
   const [clearOpen, setClearOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [clearing, setClearing] = useState(false);
+  const [motionSaving, setMotionSaving] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [themeSaving, setThemeSaving] = useState(false);
   const dark = settings?.themeMode !== "light";
@@ -35,6 +36,19 @@ export function SettingsView({ onOpenGarage }: SettingsViewProps) {
       showToast({ message: caughtError instanceof Error ? caughtError.message : "Unable to update appearance.", tone: "error" });
     } finally {
       setThemeSaving(false);
+    }
+  };
+
+  const changeReducedMotion = async (nextReducedMotion: boolean) => {
+    if (motionSaving) return;
+    setMotionSaving(true);
+    try {
+      await updateSettings({ reducedMotion: nextReducedMotion });
+      showToast({ message: nextReducedMotion ? "Reduced Motion is on." : "Reduced Motion is off.", tone: "success" });
+    } catch (caughtError) {
+      showToast({ message: caughtError instanceof Error ? caughtError.message : "Unable to update motion preference.", tone: "error" });
+    } finally {
+      setMotionSaving(false);
     }
   };
 
@@ -81,6 +95,14 @@ export function SettingsView({ onOpenGarage }: SettingsViewProps) {
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Switch between the default dark theme and a clean light surface.</p>
         </div>
         <Toggle checked={dark} disabled={themeSaving} label="Toggle appearance theme" onChange={(checked) => void changeTheme(checked)} />
+      </Card>
+      <Card className="flex items-center gap-3">
+        <Accessibility aria-hidden="true" className="size-5 shrink-0 text-red-500" strokeWidth={2} />
+        <div className="min-w-0 flex-1">
+          <p className="font-semibold text-zinc-900 dark:text-zinc-50">Reduced Motion: {reducedMotion ? "On" : "Off"}</p>
+          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{settings?.reducedMotion === null ? "Following your system preference until you choose a setting." : "Saved for this device and used across all motion."}</p>
+        </div>
+        <Toggle checked={reducedMotion} disabled={motionSaving} label="Toggle reduced motion" onChange={(checked) => void changeReducedMotion(checked)} />
       </Card>
       <Card className="flex items-center gap-3">
         <CarFront aria-hidden="true" className="size-5 shrink-0 text-red-500" strokeWidth={2} />

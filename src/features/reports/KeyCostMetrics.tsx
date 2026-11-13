@@ -39,7 +39,7 @@ export function KeyCostMetrics({
   return (
     <div className="grid grid-cols-2 gap-x-4 gap-y-5">
       {metrics.map(({ icon: Icon, label, value }) => (
-        <div key={label}>
+        <div className="motion-list-item" data-motion="cost-metric" key={label}>
           <Icon aria-hidden="true" className="size-5 text-red-500" strokeWidth={2} />
           <p className="mt-2 tabular-nums text-sm font-semibold text-zinc-900 dark:text-zinc-50">{value}</p>
           <p className="mt-1 text-[10px] font-semibold tracking-wider text-zinc-500 dark:text-zinc-400">{label.toUpperCase()}</p>
