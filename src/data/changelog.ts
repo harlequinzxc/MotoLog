@@ -9,6 +9,15 @@ export interface ReleaseNote {
 
 export const CHANGELOG: ReleaseNote[] = [
   {
+    version: "v1.5.1",
+    date: "2026-08-26",
+    title: "Sheet Scroll Lock",
+    highlights: [
+      "Locked background scrolling while a bottom sheet is open.",
+      "Contained sheet overscroll so long changelog content scrolls independently on iOS."
+    ]
+  },
+  {
     version: "v1.5.0",
     date: "2026-08-26",
     title: "Type-Specific Maintenance",
