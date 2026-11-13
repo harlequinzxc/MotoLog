@@ -1,7 +1,6 @@
 import { Calculator, Fuel, Gauge, MapPin } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 
-import { AnimatedSwap } from "@/components/ui/AnimatedSwap";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -110,7 +109,7 @@ export function FuelLogSheet({ activeFuelOptions, log, onClose, onSubmit, open, 
         <Select label="Fill-up mode" onChange={(event) => setForm((current) => ({ ...current, mode: event.target.value as FillUpMode }))} value={form.mode}>
           <option value="full">Full Tank</option><option value="partial">Partial Fill-Up</option><option value="missed">Missed a Fill-Up</option>
         </Select>
-        <AnimatedSwap contentKey={form.mode}>
+        <div className="motion-chart-enter" data-motion="fuel-mode" key={form.mode}>
           {form.mode === "missed" ? <p className="motion-list-item rounded-xl bg-zinc-100 px-3 py-2 text-sm text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400" data-motion="fuel-mode-help">This marker resets the efficiency baseline at its odometer reading. No cost or fuel volume is required.</p> : (
             <div className="grid gap-5">
               <Select label="Lock calculation field" onChange={(event) => setForm((current) => ({ ...current, locked: event.target.value as LockedField }))} value={form.locked}>
@@ -123,7 +122,7 @@ export function FuelLogSheet({ activeFuelOptions, log, onClose, onSubmit, open, 
               </div>
             </div>
           )}
-        </AnimatedSwap>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <Select label="Active fuel" onChange={(event) => setForm((current) => ({ ...current, activeFuel: event.target.value as ActiveFuel }))} value={form.activeFuel}>{activeFuelOptions.map((fuel) => <option key={fuel} value={fuel}>{fuel}</option>)}</Select>
           <Select label="Currency" onChange={(event) => setForm((current) => ({ ...current, currencyCode: event.target.value }))} value={form.currencyCode}>{CURRENCIES.map((currency) => <option key={currency.code} value={currency.code}>{currency.code} — {currency.label}</option>)}</Select>

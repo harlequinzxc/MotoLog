@@ -4,7 +4,6 @@ import { lazy, Suspense, useState } from "react";
 import { WhatsNewSheet } from "@/components/changelog/WhatsNewSheet";
 import { AppShell } from "@/components/layout/AppShell";
 import type { AppTab } from "@/components/layout/BottomNav";
-import { AnimatedSwap } from "@/components/ui/AnimatedSwap";
 import { Button } from "@/components/ui/Button";
 import { ToastProvider, useToast } from "@/components/ui/ToastProvider";
 import { AppProvider, useApp } from "@/context/AppProvider";
@@ -148,7 +147,7 @@ function AppContent() {
   return (
     <>
       <AppShell activeTab={tab} onAddFuel={() => setActionOpen(true)} onSettings={() => setTab("settings")} onTabChange={setTab}>
-        <AnimatedSwap contentKey={tab}>{content}</AnimatedSwap>
+        <div className="motion-chart-enter" data-motion="tab-content" key={tab}>{content}</div>
       </AppShell>
       <QuickActionSheet onClose={() => setActionOpen(false)} onSelect={choose} open={actionOpen} />
       <FuelLogSheet activeFuelOptions={activeFuelOptions} onClose={() => setFuelOpen(false)} onSubmit={saveFuel} open={fuelOpen} stationSuggestions={stations} />

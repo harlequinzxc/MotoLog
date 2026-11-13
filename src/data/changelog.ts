@@ -9,6 +9,15 @@ export interface ReleaseNote {
 
 export const CHANGELOG: ReleaseNote[] = [
   {
+    version: "v1.4.1",
+    date: "2026-08-26",
+    title: "Tab Rendering Repair",
+    highlights: [
+      "Fixed tab content that could remain hidden until another tab was selected.",
+      "Replaced deferred page swapping with immediate selected-tab mounting and a safe entry animation."
+    ]
+  },
+  {
     version: "v1.4.0",
     date: "2026-08-26",
     title: "Daily-Driver Interface",

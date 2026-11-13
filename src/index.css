@@ -50,12 +50,6 @@ button, input, select { font: inherit; }
   transition: transform var(--motion-fast) ease-out, opacity var(--motion-fast) ease-out;
 }
 .motion-toast[data-state="open"] { opacity: 1; transform: translateY(0); }
-.motion-swap {
-  opacity: 0;
-  transform: translateY(0.5rem);
-  transition: transform var(--motion-fast) ease-out, opacity var(--motion-fast) ease-out;
-}
-.motion-swap[data-state="open"] { opacity: 1; transform: translateY(0); }
 .motion-progress { transition: clip-path var(--motion-standard) ease-out; }
 .motion-list-item { animation: motion-list-in var(--motion-fast) ease-out both; }
 .motion-chart-enter { animation: motion-chart-in var(--motion-standard) ease-out both; }
