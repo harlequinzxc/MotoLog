@@ -1,6 +1,8 @@
+import { Fuel } from "lucide-react";
 import { useMemo, useState } from "react";
 
-import { Card } from "@/components/ui/Card";
+import { SectionHeader } from "@/components/ui/SectionHeader";
+import { Button } from "@/components/ui/Button";
 import { TimeframePills } from "@/components/ui/TimeframePills";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useApp } from "@/context/AppProvider";
@@ -61,13 +63,19 @@ export function DashboardView() {
   };
 
   return (
-    <div className="grid gap-5">
-      <div>
-        <p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">LIVE CONSUMPTION</p>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{activeVehicle.name}</h1>
-      </div>
+    <div className="grid gap-7">
+      <SectionHeader action={<Button onClick={openNewFuel} size="sm"><Fuel className="size-4" strokeWidth={2} />Log fill</Button>} eyebrow="DRIVE STATE" title={activeVehicle.name} />
+      <section className="overflow-hidden rounded-[28px] border border-zinc-800 bg-zinc-950 p-5 text-zinc-50">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-semibold tracking-[0.18em] text-zinc-500">EFFICIENCY</p>
+            <p className="mt-1 text-sm text-zinc-300">Completed tank intervals only</p>
+          </div>
+          <span className="rounded-full border border-zinc-800 px-2.5 py-1 tabular-nums text-[10px] font-semibold tracking-[0.14em] text-zinc-400">{timeframe === "all" ? "ALL TIME" : timeframe.toUpperCase()}</span>
+        </div>
+        <div className="mt-5"><ConsumptionGauge average={metrics.average} best={metrics.best} trendPercent={metrics.trendPercent} unit={activeVehicle.consumptionUnit} worst={metrics.worst} /></div>
+      </section>
       <TimeframePills onChange={setTimeframe} value={timeframe} />
-      <Card><ConsumptionGauge average={metrics.average} best={metrics.best} trendPercent={metrics.trendPercent} unit={activeVehicle.consumptionUnit} worst={metrics.worst} /></Card>
       <NextFillPredictor distanceUnit={activeVehicle.distanceUnit} onLogFuel={openNewFuel} value={predictor} volumeUnit={activeVehicle.volumeUnit} />
       <RecentActivity items={activity} onLogFuel={openNewFuel} />
       <FuelLogSheet activeFuelOptions={[...activeFuelOptions]} log={editingFuel} onClose={() => setFuelOpen(false)} onSubmit={saveFuel} open={fuelOpen} stationSuggestions={stations} />

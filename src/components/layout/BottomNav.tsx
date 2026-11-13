@@ -33,7 +33,7 @@ export function BottomNav({ activeTab, onAddFuel, onTabChange }: BottomNavProps)
       <div className="relative mx-auto grid h-[72px] max-w-[480px] grid-cols-5">
         {items.slice(0, 2).map(({ icon, label, tab }) => <NavigationButton active={activeTab === tab} icon={icon} key={tab} label={label} onClick={() => onTabChange(tab)} />)}
         <div className="relative flex items-center justify-center">
-          <button aria-label="Log a fuel fill-up" className="motion-press absolute -top-6 grid size-14 place-items-center rounded-2xl bg-red-600 text-white shadow-crimson hover:bg-red-500 dark:bg-red-500 dark:hover:bg-red-400" data-motion="quick-action" onClick={onAddFuel} type="button">
+          <button aria-label="Log a fuel fill-up" className="motion-press absolute -top-6 grid size-14 place-items-center rounded-2xl bg-red-600 text-white hover:bg-red-500 dark:bg-red-500 dark:hover:bg-red-400" data-motion="quick-action" onClick={onAddFuel} type="button">
             <CirclePlus className="size-6" strokeWidth={2} />
           </button>
         </div>
