@@ -26,7 +26,7 @@ export function AppHeader({ onSettings }: { onSettings: () => void }) {
   };
 
   return (
-    <header className="flex items-center gap-3 px-4 pb-3 pt-[max(1rem,env(safe-area-inset-top))] sm:px-6">
+    <header className="safe-top flex items-center gap-3 px-4 pb-3 sm:px-6">
       <AppLogo size={40} />
       <label className="relative min-w-0 flex-1">
         <span className="sr-only">Active vehicle</span>

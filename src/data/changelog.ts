@@ -9,6 +9,15 @@ export interface ReleaseNote {
 
 export const CHANGELOG: ReleaseNote[] = [
   {
+    version: "v1.4.2",
+    date: "2026-08-26",
+    title: "iOS Safe-Area Repair",
+    highlights: [
+      "Added explicit installed-iOS status-bar and home-indicator insets.",
+      "Matched the fixed navigation height to its content clearance and removed the translucent bottom safe-area seam."
+    ]
+  },
+  {
     version: "v1.4.1",
     date: "2026-08-26",
     title: "Tab Rendering Repair",
