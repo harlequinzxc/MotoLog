@@ -119,7 +119,7 @@ function AppContent() {
 
   if (vehicles.length === 0) {
     return (
-      <div className="min-h-[100dvh] overflow-x-hidden bg-zinc-950 px-4 pb-[env(safe-area-inset-bottom)] pt-[max(2rem,env(safe-area-inset-top))] text-zinc-50">
+      <div className="safe-onboarding-top min-h-[100dvh] overflow-x-hidden bg-zinc-950 px-4 pb-[var(--safe-area-bottom)] text-zinc-50">
         <WelcomeCard isSeeding={seeding} onAddVehicle={() => setVehicleOpen(true)} onSeedData={seed} />
         <VehicleFormSheet onClose={() => setVehicleOpen(false)} onSubmit={saveVehicle} open={vehicleOpen} />
         <WhatsNewSheet />

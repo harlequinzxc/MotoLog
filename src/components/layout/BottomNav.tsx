@@ -29,7 +29,7 @@ function NavigationButton({ active, icon: Icon, label, onClick }: { active: bool
 
 export function BottomNav({ activeTab, onAddFuel, onTabChange }: BottomNavProps) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200 bg-zinc-50/95 pb-[env(safe-area-inset-bottom)] backdrop-blur dark:border-zinc-800 dark:bg-zinc-950/95">
+    <nav className="safe-nav-bottom fixed inset-x-0 bottom-0 z-50 border-t border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950">
       <div className="relative mx-auto grid h-[72px] max-w-[480px] grid-cols-5">
         {items.slice(0, 2).map(({ icon, label, tab }) => <NavigationButton active={activeTab === tab} icon={icon} key={tab} label={label} onClick={() => onTabChange(tab)} />)}
         <div className="relative flex items-center justify-center">
