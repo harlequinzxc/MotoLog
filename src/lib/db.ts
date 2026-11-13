@@ -23,6 +23,10 @@ interface LegacyExpense extends Omit<ExpenseRecord, "category" | "odometerKm" | 
   category: "parking" | "erp" | "other";
 }
 
+type SettingsWithOptionalMotion = Omit<AppSettings, "reducedMotion"> & {
+  reducedMotion?: boolean | null;
+};
+
 export class MotoLogDB extends Dexie {
   vehicles!: EntityTable<Vehicle, "id">;
   fuelLogs!: EntityTable<FuelLog, "id">;
@@ -91,6 +95,22 @@ export class MotoLogDB extends Dexie {
         updatedAt: timestamp
       })));
     });
+    this.version(3).stores({
+      vehicles: "id,type,createdAt",
+      fuelLogs: "id,vehicleId,occurredAt,[vehicleId+occurredAt]",
+      serviceRecords: "id,vehicleId,occurredAt",
+      serviceItems: "id,vehicleId,[vehicleId+title]",
+      serviceVisits: "id,vehicleId,occurredAt,[vehicleId+occurredAt]",
+      serviceVisitItems: "id,visitId,serviceItemId",
+      expenseRecords: "id,vehicleId,occurredAt",
+      settings: "id"
+    }).upgrade(async (transaction) => {
+      const settingsTable = transaction.table("settings") as Table<SettingsWithOptionalMotion, string>;
+      const settings = await settingsTable.get("app");
+      if (settings?.reducedMotion === undefined) {
+        await settingsTable.update("app", { reducedMotion: null, updatedAt: new Date().toISOString() });
+      }
+    });
   }
 }
 
@@ -98,9 +118,15 @@ export const db = new MotoLogDB();
 
 export async function ensureSettings() {
   const existing = await db.settings.get("app");
-  if (existing) return existing;
+  const legacySettings = existing as SettingsWithOptionalMotion | undefined;
+  if (legacySettings) {
+    if (legacySettings.reducedMotion !== undefined) return legacySettings as AppSettings;
+    const normalized: AppSettings = { ...legacySettings, reducedMotion: null, updatedAt: new Date().toISOString() };
+    await db.settings.put(normalized);
+    return normalized;
+  }
   const timestamp = new Date().toISOString();
-  const settings: AppSettings = { id: "app", activeVehicleId: null, themeMode: "dark", lastSeenVersion: null, createdAt: timestamp, updatedAt: timestamp };
+  const settings: AppSettings = { id: "app", activeVehicleId: null, themeMode: "dark", reducedMotion: null, lastSeenVersion: null, createdAt: timestamp, updatedAt: timestamp };
   await db.settings.put(settings);
   return settings;
 }

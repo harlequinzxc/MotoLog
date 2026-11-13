@@ -9,6 +9,16 @@ export interface ReleaseNote {
 
 export const CHANGELOG: ReleaseNote[] = [
   {
+    version: "v1.3.0",
+    date: "2026-08-26",
+    title: "Motion & Accessibility Controls",
+    highlights: [
+      "Added a persisted Reduced Motion setting with system-preference fallback.",
+      "Animated sheets, toasts, tabs, lists, charts, and tactile controls with motion-safe fallbacks.",
+      "Improved empty states, retry feedback, and numeric alignment across the app."
+    ]
+  },
+  {
     version: "v1.2.0",
     date: "2026-08-26",
     title: "Reports & Release Hub",

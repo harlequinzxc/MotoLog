@@ -20,7 +20,7 @@ export function ChangelogSheet({ onClose, open }: ChangelogSheetProps) {
         </div>
         <div className="mt-4 grid gap-3">
           {CHANGELOG.map((release) => (
-            <article className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950" key={release.version}>
+            <article className="motion-list-item rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950" data-motion="release-note" key={release.version}>
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">

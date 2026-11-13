@@ -10,8 +10,8 @@ import { RecentActivity, type ActivityItem } from "@/features/dashboard/RecentAc
 import { ExpenseSheet } from "@/features/expenses/ExpenseSheet";
 import { FuelLogSheet } from "@/features/fuel/FuelLogSheet";
 import { ServiceVisitSheet } from "@/features/service/ServiceVisitSheet";
-import { efficiencyMetrics, logsForTimeframe, nextFillPredictor, type Timeframe } from "@/utils/dashboardMetrics";
 import type { ExpenseInput, ExpenseRecord, FuelLog, FuelLogInput, ServiceVisit, ServiceVisitInput } from "@/types";
+import { efficiencyMetrics, logsForTimeframe, nextFillPredictor, type Timeframe } from "@/utils/dashboardMetrics";
 
 export function DashboardView() {
   const { activeVehicle, expenseRecords, fuelLogs, serviceItems, serviceVisitItems, serviceVisits, updateExpense, updateFuelLog, updateServiceVisit } = useApp();
@@ -26,7 +26,9 @@ export function DashboardView() {
   const logs = useMemo(() => fuelLogs.filter((log) => log.vehicleId === activeVehicle?.id), [activeVehicle?.id, fuelLogs]);
   const scopedLogs = useMemo(() => logsForTimeframe(logs, timeframe), [logs, timeframe]);
   const metrics = efficiencyMetrics(scopedLogs);
+
   if (!activeVehicle) return null;
+
   const predictor = nextFillPredictor(activeVehicle, logs);
   const items = serviceItems.filter((item) => item.vehicleId === activeVehicle.id);
   const visits = serviceVisits.filter((visit) => visit.vehicleId === activeVehicle.id);
@@ -38,9 +40,39 @@ export function DashboardView() {
   ].sort((first, second) => second.occurredAt.localeCompare(first.occurredAt));
   const activeFuelOptions = activeVehicle.fuelType === "dual-fuel" ? ["petrol", "lpg"] as const : [activeVehicle.fuelType === "lpg" ? "lpg" : activeVehicle.fuelType === "diesel" ? "diesel" : "petrol"] as const;
   const stations = fuelLogs.map((log) => log.stationName).filter(Boolean);
-  const saveFuel = async (input: FuelLogInput) => { if (!editingFuel) return; await updateFuelLog(editingFuel.id, input); showToast({ message: "Fuel log updated.", tone: "success" }); };
-  const saveExpense = async (input: ExpenseInput) => { if (!editingExpense) return; await updateExpense(editingExpense.id, input); showToast({ message: "Expense updated.", tone: "success" }); };
-  const saveVisit = async (input: ServiceVisitInput) => { if (!editingVisit) return; await updateServiceVisit(editingVisit.id, input); showToast({ message: "Service visit updated.", tone: "success" }); };
+  const openNewFuel = () => {
+    setEditingFuel(undefined);
+    setFuelOpen(true);
+  };
+  const saveFuel = async (input: FuelLogInput) => {
+    if (!editingFuel) return;
+    await updateFuelLog(editingFuel.id, input);
+    showToast({ message: "Fuel log updated.", tone: "success" });
+  };
+  const saveExpense = async (input: ExpenseInput) => {
+    if (!editingExpense) return;
+    await updateExpense(editingExpense.id, input);
+    showToast({ message: "Expense updated.", tone: "success" });
+  };
+  const saveVisit = async (input: ServiceVisitInput) => {
+    if (!editingVisit) return;
+    await updateServiceVisit(editingVisit.id, input);
+    showToast({ message: "Service visit updated.", tone: "success" });
+  };
 
-  return <div className="grid gap-5"><div><p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">LIVE CONSUMPTION</p><h1 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{activeVehicle.name}</h1></div><TimeframePills onChange={setTimeframe} value={timeframe}/><Card><ConsumptionGauge average={metrics.average} best={metrics.best} trendPercent={metrics.trendPercent} unit={activeVehicle.consumptionUnit} worst={metrics.worst}/></Card><NextFillPredictor distanceUnit={activeVehicle.distanceUnit} value={predictor} volumeUnit={activeVehicle.volumeUnit}/><RecentActivity items={activity}/><FuelLogSheet activeFuelOptions={[...activeFuelOptions]} log={editingFuel} onClose={() => setFuelOpen(false)} onSubmit={saveFuel} open={fuelOpen} stationSuggestions={stations}/><ExpenseSheet currencyCode={activeVehicle.currencyCode} expense={editingExpense} onClose={() => setExpenseOpen(false)} onSubmit={saveExpense} open={expenseOpen}/><ServiceVisitSheet currencyCode={activeVehicle.currencyCode} items={items} onClose={() => setServiceOpen(false)} onSubmit={saveVisit} open={serviceOpen} visit={editingVisit} visitItemIds={editingVisit ? itemIdsForVisit(editingVisit.id) : []}/></div>;
+  return (
+    <div className="grid gap-5">
+      <div>
+        <p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">LIVE CONSUMPTION</p>
+        <h1 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{activeVehicle.name}</h1>
+      </div>
+      <TimeframePills onChange={setTimeframe} value={timeframe} />
+      <Card><ConsumptionGauge average={metrics.average} best={metrics.best} trendPercent={metrics.trendPercent} unit={activeVehicle.consumptionUnit} worst={metrics.worst} /></Card>
+      <NextFillPredictor distanceUnit={activeVehicle.distanceUnit} onLogFuel={openNewFuel} value={predictor} volumeUnit={activeVehicle.volumeUnit} />
+      <RecentActivity items={activity} onLogFuel={openNewFuel} />
+      <FuelLogSheet activeFuelOptions={[...activeFuelOptions]} log={editingFuel} onClose={() => setFuelOpen(false)} onSubmit={saveFuel} open={fuelOpen} stationSuggestions={stations} />
+      <ExpenseSheet currencyCode={activeVehicle.currencyCode} expense={editingExpense} onClose={() => setExpenseOpen(false)} onSubmit={saveExpense} open={expenseOpen} />
+      <ServiceVisitSheet currencyCode={activeVehicle.currencyCode} items={items} onClose={() => setServiceOpen(false)} onSubmit={saveVisit} open={serviceOpen} visit={editingVisit} visitItemIds={editingVisit ? itemIdsForVisit(editingVisit.id) : []} />
+    </div>
+  );
 }

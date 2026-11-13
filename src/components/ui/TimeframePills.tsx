@@ -1,3 +1,4 @@
+import { cn } from "@/lib/cn";
 import type { Timeframe } from "@/utils/dashboardMetrics";
 
 const OPTIONS: Array<{ label: string; value: Timeframe }> = [
@@ -15,17 +16,22 @@ interface TimeframePillsProps {
 export function TimeframePills({ onChange, value }: TimeframePillsProps) {
   return (
     <div aria-label="Timeframe" className="grid grid-cols-4 rounded-2xl bg-zinc-100 p-1 dark:bg-zinc-800" role="group">
-      {OPTIONS.map((option) => (
-        <button
-          aria-pressed={value === option.value}
-          className={`min-h-[44px] rounded-xl tabular-nums text-xs font-semibold ${value === option.value ? "bg-red-600 text-white dark:bg-red-500" : "text-zinc-500 dark:text-zinc-400"}`}
-          key={option.value}
-          onClick={() => onChange(option.value)}
-          type="button"
-        >
-          {option.label}
-        </button>
-      ))}
+      {OPTIONS.map((option) => {
+        const active = value === option.value;
+        return (
+          <button
+            aria-pressed={active}
+            className={cn("motion-press relative min-h-[44px] overflow-hidden rounded-xl tabular-nums text-xs font-semibold", active ? "text-white" : "text-zinc-500 dark:text-zinc-400")}
+            data-motion="timeframe-pill"
+            key={option.value}
+            onClick={() => onChange(option.value)}
+            type="button"
+          >
+            <span aria-hidden="true" className="motion-tab-indicator absolute inset-0 rounded-xl bg-red-600 dark:bg-red-500" data-motion="timeframe-indicator" data-state={active ? "open" : "closed"} />
+            <span className="relative">{option.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }
