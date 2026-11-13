@@ -1,8 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="MotoLog emblem">
-  <rect width="512" height="512" fill="#09090b"/>
-  <path d="M146 268a126 126 0 0 1 220 0" fill="none" stroke="#ef4444" stroke-width="32" stroke-linecap="round"/>
-  <path d="M156 372V218l100 92 100-92v154" fill="none" stroke="#ef4444" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M256 264l55-78" fill="none" stroke="#fafafa" stroke-width="18" stroke-linecap="round"/>
-  <circle cx="256" cy="264" r="20" fill="#fafafa"/>
-  <circle cx="256" cy="264" r="8" fill="#09090b"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#09090b"/><path d="M146 268a126 126 0 0 1 220 0" fill="none" stroke="#ef4444" stroke-width="32" stroke-linecap="round"/><path d="M156 372V218l100 92 100-92v154" fill="none" stroke="#ef4444" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/><path d="M256 264l55-78" fill="none" stroke="#fafafa" stroke-width="18" stroke-linecap="round"/><circle cx="256" cy="264" r="20" fill="#fafafa"/><circle cx="256" cy="264" r="8" fill="#09090b"/></svg>

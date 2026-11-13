@@ -1,39 +1,16 @@
-export function localDateInputValue(date = new Date()) {
+export function localDateTimeInputValue(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  const hour = String(date.getHours()).padStart(2, "0");
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hour}:${minute}`;
 }
+export function localDateTimeToIso(value: string) { const [datePart, timePart] = value.split("T"); const [year, month, day] = datePart.split("-").map(Number); const [hour, minute] = timePart.split(":").map(Number); return new Date(year, month - 1, day, hour, minute).toISOString(); }
+export function formatLocalDateTime(iso: string) { return new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso)); }
 
-export function localDateToIso(dateValue: string) {
-  const [year, month, day] = dateValue.split("-").map(Number);
-  const date = new Date(year, month - 1, day, 12, 0, 0);
-  return date.toISOString();
-}
-
-export function addDaysIso(days: number, source = new Date()) {
-  const date = new Date(source);
-  date.setDate(date.getDate() + days);
-  return date.toISOString();
-}
-
-export function addMonthsIso(months: number, source = new Date()) {
-  const date = new Date(source);
-  date.setMonth(date.getMonth() + months);
-  return date.toISOString();
-}
-
-export function formatLocalDate(isoTimestamp: string) {
-  return new Intl.DateTimeFormat(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric"
-  }).format(new Date(isoTimestamp));
-}
-
-export function daysUntil(isoTimestamp: string, now = new Date()) {
-  const target = new Date(isoTimestamp);
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-  const end = new Date(target.getFullYear(), target.getMonth(), target.getDate()).getTime();
-  return Math.round((end - start) / 86_400_000);
+export function formatLocalCalendarDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return value;
+  return new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", year: "numeric" }).format(new Date(year, month - 1, day));
 }

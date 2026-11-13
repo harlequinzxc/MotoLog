@@ -2,19 +2,21 @@ import { cn } from "@/lib/cn";
 
 interface ToggleProps {
   checked: boolean;
+  disabled?: boolean;
   label: string;
   onChange: (checked: boolean) => void;
 }
 
-export function Toggle({ checked, label, onChange }: ToggleProps) {
+export function Toggle({ checked, disabled = false, label, onChange }: ToggleProps) {
   return (
     <button
       aria-checked={checked}
       aria-label={label}
       className={cn(
-        "relative inline-flex min-h-[44px] min-w-[52px] items-center rounded-full p-1 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500",
+        "relative inline-flex min-h-[44px] min-w-[52px] items-center rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 disabled:pointer-events-none disabled:opacity-50",
         checked ? "bg-red-600 dark:bg-red-500" : "bg-zinc-300 dark:bg-zinc-700"
       )}
+      disabled={disabled}
       onClick={() => onChange(!checked)}
       role="switch"
       type="button"

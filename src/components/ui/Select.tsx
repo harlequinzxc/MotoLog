@@ -1,34 +1,5 @@
-import { forwardRef, type ReactNode, type SelectHTMLAttributes } from "react";
 import { ChevronDown } from "lucide-react";
+import { forwardRef, type ReactNode, type SelectHTMLAttributes } from "react";
 import { cn } from "@/lib/cn";
-
-interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
-  children: ReactNode;
-  label: string;
-}
-
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
-  { children, className, id, label, ...props },
-  ref
-) {
-  const selectId = id ?? `select-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-  return (
-    <label className="grid gap-2" htmlFor={selectId}>
-      <span className="text-xs font-semibold tracking-wide text-zinc-600 dark:text-zinc-400">{label}</span>
-      <span className="relative">
-        <select
-          {...props}
-          className={cn(
-            "h-12 w-full appearance-none rounded-xl border border-zinc-300 bg-white px-3 pr-10 text-base text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50",
-            className
-          )}
-          id={selectId}
-          ref={ref}
-        >
-          {children}
-        </select>
-        <ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" strokeWidth={2} />
-      </span>
-    </label>
-  );
-});
+interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement>{children:ReactNode;label:string}
+export const Select=forwardRef<HTMLSelectElement,SelectProps>(function Select({children,className,id,label,...props},ref){const selectId=id??`select-${label.toLowerCase().replace(/[^a-z0-9]+/g,"-")}`;return <label className="grid gap-2" htmlFor={selectId}><span className="text-xs font-semibold tracking-wide text-zinc-600 dark:text-zinc-400">{label}</span><span className="relative block"><select {...props} className={cn("h-12 w-full appearance-none rounded-xl border border-zinc-300 bg-white px-3 pr-10 text-base text-zinc-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50",className)} id={selectId} ref={ref}>{children}</select><ChevronDown aria-hidden="true" className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" strokeWidth={2}/></span></label>;});

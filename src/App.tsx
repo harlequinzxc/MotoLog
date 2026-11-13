@@ -1,118 +1,23 @@
-import { BookOpen, Wrench } from "lucide-react";
-import { useState } from "react";
-
+import { lazy, Suspense, useState } from "react";
 import { WhatsNewSheet } from "@/components/changelog/WhatsNewSheet";
 import { AppShell } from "@/components/layout/AppShell";
-import { Card } from "@/components/ui/Card";
+import type { AppTab } from "@/components/layout/BottomNav";
 import { ToastProvider, useToast } from "@/components/ui/ToastProvider";
 import { AppProvider, useApp } from "@/context/AppProvider";
+import { QuickActionSheet, type QuickAction } from "@/features/actions/QuickActionSheet";
+import { DashboardView } from "@/features/dashboard/DashboardView";
+import { ExpenseSheet } from "@/features/expenses/ExpenseSheet";
+import { FuelLogSheet } from "@/features/fuel/FuelLogSheet";
 import { GarageView } from "@/features/garage/GarageView";
 import { VehicleFormSheet } from "@/features/garage/VehicleFormSheet";
+import { LogbookView } from "@/features/logbook/LogbookView";
 import { WelcomeCard } from "@/features/onboarding/WelcomeCard";
-import { PlaceholderView } from "@/features/shell/PlaceholderView";
+import { ServiceView } from "@/features/service/ServiceView";
 import { SettingsView } from "@/features/settings/SettingsView";
-import type { AppTab } from "@/components/layout/BottomNav";
-import type { VehicleInput } from "@/types";
+import type { ExpenseInput, FuelLogInput, ServiceVisitInput, VehicleInput } from "@/types";
+import { ServiceVisitSheet } from "@/features/service/ServiceVisitSheet";
 
-function DashboardView() {
-  const { activeVehicle, fixedCosts } = useApp();
-  if (!activeVehicle) return null;
-  const vehicleCostCount = fixedCosts.filter((cost) => cost.vehicleId === activeVehicle.id).length;
-  return (
-    <div className="grid gap-5">
-      <div>
-        <p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">DASHBOARD</p>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">{activeVehicle.name}</h1>
-      </div>
-      <Card>
-        <p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">CURRENT ODOMETER</p>
-        <p className="mt-2 tabular-nums text-4xl font-semibold text-zinc-900 dark:text-zinc-50">{activeVehicle.currentOdometerKm.toLocaleString()} km</p>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">{activeVehicle.makeModel} · {activeVehicle.defaultFuelGrade} · {activeVehicle.tankCapacityLitres} L tank</p>
-      </Card>
-      <Card>
-        <p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">OWNERSHIP TRACKER</p>
-        <p className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">{vehicleCostCount} recurring costs tracked</p>
-        <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">Fuel analytics, trip margins, and renewal summaries arrive in the next slice.</p>
-      </Card>
-    </div>
-  );
-}
+const ReportsView = lazy(() => import("@/features/reports/ReportsView").then(({ ReportsView: View }) => ({ default: View })));
 
-function AppContent() {
-  const { createVehicle, error, isLoading, seedSampleData, vehicles } = useApp();
-  const { showToast } = useToast();
-  const [tab, setTab] = useState<AppTab>("dashboard");
-  const [isVehicleSheetOpen, setIsVehicleSheetOpen] = useState(false);
-  const [isSeeding, setIsSeeding] = useState(false);
-
-  const openVehicleForm = () => setIsVehicleSheetOpen(true);
-  const seed = async () => {
-    setIsSeeding(true);
-    try {
-      await seedSampleData();
-      setTab("dashboard");
-      showToast({ message: "Sample vehicles and three months of logs added.", tone: "success" });
-    } catch (caughtError) {
-      showToast({ message: caughtError instanceof Error ? caughtError.message : "Unable to add sample data.", tone: "error" });
-    } finally {
-      setIsSeeding(false);
-    }
-  };
-
-  const saveFirstVehicle = async (input: VehicleInput) => {
-    await createVehicle(input);
-    setTab("garage");
-    showToast({ message: "Vehicle and service schedules added.", tone: "success" });
-  };
-
-  if (isLoading) {
-    return <div className="grid min-h-[100dvh] place-items-center bg-zinc-950 text-sm text-zinc-400">Loading your offline garage…</div>;
-  }
-
-  if (error) {
-    return <div className="grid min-h-[100dvh] place-items-center bg-zinc-950 p-6 text-center text-sm text-rose-300">{error}</div>;
-  }
-
-  if (vehicles.length === 0) {
-    return (
-      <div className="min-h-[100dvh] bg-zinc-950 px-4 pb-[env(safe-area-inset-bottom)] pt-[max(2rem,env(safe-area-inset-top))] text-zinc-50">
-        <WelcomeCard isSeeding={isSeeding} onAddVehicle={openVehicleForm} onSeedData={seed} />
-        <VehicleFormSheet onClose={() => setIsVehicleSheetOpen(false)} onSubmit={saveFirstVehicle} open={isVehicleSheetOpen} />
-      </div>
-    );
-  }
-
-  const content = tab === "dashboard"
-    ? <DashboardView />
-    : tab === "garage"
-      ? <GarageView />
-      : tab === "logbook"
-        ? <PlaceholderView description="Fuel logs and cross-border cost tracking will be available in Slice 2." icon={BookOpen} title="Logbook" />
-        : tab === "maintenance"
-          ? <PlaceholderView description="Your seeded service presets are saved locally and will become an actionable maintenance planner in Slice 2." icon={Wrench} title="Maintenance" />
-          : <SettingsView />;
-
-  return (
-    <>
-      <AppShell
-        activeTab={tab}
-        onAdd={() => { setTab("garage"); }}
-        onSettings={() => setTab("settings")}
-        onTabChange={setTab}
-      >
-        {content}
-      </AppShell>
-      <WhatsNewSheet />
-    </>
-  );
-}
-
-export default function App() {
-  return (
-    <ToastProvider>
-      <AppProvider>
-        <AppContent />
-      </AppProvider>
-    </ToastProvider>
-  );
-}
+function AppContent(){const{activeVehicle,addExpense,addFuelLog,addServiceVisit,createVehicle,error,fuelLogs,isLoading,seedSampleData,serviceItems,vehicles}=useApp();const{showToast}=useToast();const[tab,setTab]=useState<AppTab>("dashboard"),[vehicleOpen,setVehicleOpen]=useState(false),[actionOpen,setActionOpen]=useState(false),[fuelOpen,setFuelOpen]=useState(false),[expenseOpen,setExpenseOpen]=useState(false),[serviceOpen,setServiceOpen]=useState(false),[seeding,setSeeding]=useState(false);const seed=async()=>{setSeeding(true);try{await seedSampleData();setTab("dashboard");showToast({message:"Sample data loaded.",tone:"success"})}catch(caughtError){showToast({message:caughtError instanceof Error?caughtError.message:"Unable to seed sample data.",tone:"error"})}finally{setSeeding(false)}};const saveVehicle=async(input:VehicleInput)=>{await createVehicle(input);setTab("garage");showToast({message:"Vehicle added.",tone:"success"})};const saveFuel=async(input:FuelLogInput)=>{await addFuelLog(input);setTab("logbook");showToast({message:"Fuel log saved and mileage recalculated.",tone:"success"})};const saveExpense=async(input:ExpenseInput)=>{await addExpense(input);setTab("logbook");showToast({message:"Expense saved.",tone:"success"})};const saveService=async(input:ServiceVisitInput)=>{await addServiceVisit(input);setTab("service");showToast({message:"Service visit saved.",tone:"success"})};if(isLoading)return <div className="grid min-h-[100dvh] place-items-center bg-zinc-950 text-sm text-zinc-400">Loading offline garage…</div>;if(error)return <div className="grid min-h-[100dvh] place-items-center bg-zinc-950 p-6 text-center text-sm text-rose-300">{error}</div>;if(vehicles.length===0)return <div className="min-h-[100dvh] overflow-x-hidden bg-zinc-950 px-4 pb-[env(safe-area-inset-bottom)] pt-[max(2rem,env(safe-area-inset-top))] text-zinc-50"><WelcomeCard isSeeding={seeding} onAddVehicle={()=>setVehicleOpen(true)} onSeedData={seed}/><VehicleFormSheet onClose={()=>setVehicleOpen(false)} onSubmit={saveVehicle} open={vehicleOpen}/><WhatsNewSheet/></div>;if(!activeVehicle)return null;const activeFuelOptions=activeVehicle.fuelType==="dual-fuel"?["petrol","lpg"] as const:[activeVehicle.fuelType==="lpg"?"lpg":activeVehicle.fuelType==="diesel"?"diesel":"petrol"] as const;const stations=fuelLogs.map(log=>log.stationName).filter(Boolean);const activeItems=serviceItems.filter(item=>item.vehicleId===activeVehicle.id);const choose=(action:QuickAction)=>{if(action==="fuel")setFuelOpen(true);if(action==="service")setServiceOpen(true);if(action==="expense")setExpenseOpen(true)};const content=tab==="dashboard"?<DashboardView/>:tab==="logbook"?<LogbookView/>:tab==="garage"?<GarageView/>:tab==="service"?<ServiceView/>:tab==="reports"?<Suspense fallback={<div className="grid min-h-[240px] place-items-center text-sm text-zinc-500 dark:text-zinc-400">Loading reports…</div>}><ReportsView/></Suspense>:<SettingsView onOpenGarage={()=>setTab("garage")}/>;return <><AppShell activeTab={tab} onAddFuel={()=>setActionOpen(true)} onSettings={()=>setTab("settings")} onTabChange={setTab}>{content}</AppShell><QuickActionSheet onClose={()=>setActionOpen(false)} onSelect={choose} open={actionOpen}/><FuelLogSheet activeFuelOptions={[...activeFuelOptions]} onClose={()=>setFuelOpen(false)} onSubmit={saveFuel} open={fuelOpen} stationSuggestions={stations}/><ExpenseSheet currencyCode={activeVehicle.currencyCode} onClose={()=>setExpenseOpen(false)} onSubmit={saveExpense} open={expenseOpen}/><ServiceVisitSheet currencyCode={activeVehicle.currencyCode} items={activeItems} onClose={()=>setServiceOpen(false)} onSubmit={saveService} open={serviceOpen}/><WhatsNewSheet/></>}
+export default function App(){return <ToastProvider><AppProvider><AppContent/></AppProvider></ToastProvider>}

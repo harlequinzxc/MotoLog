@@ -17,15 +17,12 @@ These standards apply across every file and action in this repository. Violation
 ## 1A. Conversational Modes & Pre-Execution Approval Gates
 
 ### Chat-Only Override (`DO NOT CODE, JUST CHAT WITH ME`)
-
 Whenever the user includes `DO NOT CODE, JUST CHAT WITH ME`—or asks a purely exploratory question without requesting edits—do not create, modify, or delete files, and do not run Git commits or pushes. Respond strictly with conversational analysis, ideas, or architectural advice.
 
 ### Clarification & Step-by-Step Plan Gate
-
 Whenever a request is ambiguous, touches core architecture or schemas, or the user asks for clarifying questions or an implementation plan before starting, stop before editing files.
 
 Respond with:
-
 1. **Understanding & Rationale:** Briefly confirm the goal, explain why the proposed approach will work, and identify edge cases or prerequisites needed from the user.
 2. **Clarifying Questions:** Ask targeted questions that eliminate bugs or guesswork, where needed.
 3. **Step-by-Step Execution Plan:** List the exact files to create or modify and the planned SemVer bump.
@@ -33,7 +30,6 @@ Respond with:
 Wait for explicit user approval before writing code or pushing to GitHub.
 
 ### Candid Project Audit Mode
-
 Whenever the user asks for a project rating or critique, objectively score the app from `1–10` across **Idea**, **Features**, and **User Experience**. Explain the reasoning candidly and propose 3–5 high-impact, actionable upgrades that would make it a `10/10` product.
 
 ---
@@ -43,21 +39,18 @@ Whenever the user asks for a project rating or critique, objectively score the a
 Never write ad-hoc, one-off Tailwind styling for recurring elements. Build and strictly reuse centralized UI primitives inside `src/components/ui/`.
 
 ### Buttons (`<Button />`)
-
 - Maximum 4 variants: `primary`, `secondary`, `ghost`, `danger`.
 - Maximum 3 sizes: `sm`, `md`, `lg`.
 - Every interactive button must have a minimum touch target height of `44px` (`min-h-[44px]`).
 - Buttons must disable/lock during active async submissions to prevent double-tap duplicates.
 
 ### Cards (`<Card />`)
-
 - Standardized radius: `rounded-2xl`.
 - Standardized padding: `p-4` on mobile, `p-5` on desktop.
 - Subtle `1px` border: `border-zinc-200 dark:border-zinc-800`.
 - Consistent elevation.
 
 ### Form Inputs (`<Input />`, `<Select />`, `<Toggle />`)
-
 - Numeric inputs must use `inputMode="decimal"` or `inputMode="numeric"` so mobile devices trigger the correct keypad.
 - Inputs must use `text-base` (16px minimum) to prevent iOS Safari auto-zoom on focus.
 - Consistent `h-12` height.
@@ -65,42 +58,44 @@ Never write ad-hoc, one-off Tailwind styling for recurring elements. Build and s
 - Use clear inline unit and label affixes where appropriate.
 
 ### Modals & Drawers (`<BottomSheet />`)
-
 - On mobile viewports (`<768px`), all creation/edit forms must render as smooth slide-up bottom sheets.
 - Bottom sheets must include a drag handle, backdrop-tap and `Escape` dismissal, and a sticky bottom submit CTA.
 - Never use cramped centered popups for creation/edit forms on mobile.
 
 ### Status Badges (`<Badge />`)
-
 - Use standardized semantic pill components for status indicators, tags, and categories.
 
 ---
 
 ## 3. Visual Hierarchy, Typography & Color Discipline (Black & Red Edition)
 
-### Color palette
+### Color Palette
+- **Dark Mode (Default):** Deep obsidian/carbon black background (`bg-zinc-950` or `bg-black`), elevated cards (`bg-zinc-900` / `border-zinc-800`), primary text (`text-zinc-50`), and secondary text (`text-zinc-400`).
+- **Light Mode (Adaptive/Toggleable):** Clean zinc light background (`bg-zinc-50`), white cards (`bg-white` / `border-zinc-200`), primary text (`text-zinc-900`), and secondary text (`text-zinc-500`).
+- **Primary Brand & Accent:** High-impact crimson/ruby red (`red-600` light / `red-500` dark) for primary CTAs, active navigation states, key metric highlights, and interactive focal points.
+- **Semantic Accents:** Rose/red variants for errors and destructive actions, `amber-500` for warnings/pending states, and neutral zinc for secondary badges.
 
-- **Dark mode (default):** Deep obsidian/carbon black background (`bg-zinc-950` or `bg-black`), elevated cards (`bg-zinc-900` / `border-zinc-800`), primary text (`text-zinc-50`), and secondary text (`text-zinc-400`).
-- **Light mode (adaptive/toggleable):** Clean zinc light background (`bg-zinc-50`), white cards (`bg-white` / `border-zinc-200`), primary text (`text-zinc-900`), and secondary text (`text-zinc-500`).
-- **Primary brand and accent:** High-impact crimson/ruby red (`red-600` light / `red-500` dark) for primary CTAs, active navigation states, key metric highlights, and interactive focal points.
-- **Semantic accents:** Rose/red variants for errors and destructive actions, `amber-500` for warnings/pending states, and neutral zinc for secondary badges.
-
-### Tabular numbers
-
+### Tabular Numbers
 Every numerical metric—including counters, currency totals, percentages, timestamps, and live calculations—must apply `tabular-nums` so digits align vertically and never jitter during updates.
 
-### Strict iconography
-
+### Strict Iconography
 - Exclusively use `lucide-react` for all icons.
 - Never import icons from another library or use raw inline SVGs for UI icons.
 - Use standardized sizes: `w-4 h-4` inline/badges, `w-5 h-5` navigation/buttons, and `w-6 h-6` hero/FAB.
 - Use consistent `strokeWidth={2}`.
 - Every icon-only button must include a descriptive `aria-label`.
 
-### Intentional motion
-
-- Respect `prefers-reduced-motion`.
-- Never make essential feedback or task completion depend on animation completion.
+### Stateful Motion & User-Controlled `Reduced Motion` Toggle
+- **Animate All UI State Transitions:** Anything that appears, disappears, pops up, slides in/out, expands, contracts, or changes state MUST be animated smoothly—never snapping abruptly into or out of existence:
+  - **Popups, Modals & `<BottomSheet />`:** Backdrop fade (`opacity`) paired with directional slide/scale (`translateY` / `scale`) on both mount AND unmount (keep elements mounted until exit animations finish).
+  - **Expand / Collapse (Accordions, Drawers, Filter Bars):** Smooth height/grid-row (`grid-template-rows: 0fr -> 1fr`) + `opacity` transitions.
+  - **Lists, Toasts, Tabs & Data Updates:** Subtle entrance/exit slides for `<Toast />` and list mutations, animated active-tab indicators, and smooth tweened transitions for gauges, progress bars, and chart updates.
+  - **Tactile Press Feedback:** Subtle `active:scale-[0.98]` + `150ms` `ease-out` transitions on interactive buttons and cards.
+- **60fps GPU Performance & Snappy Timing:** Animate strictly GPU-composited properties (`transform`, `opacity`, `clip-path`, or CSS Grid row tracks). Use crisp mobile timings: `150ms–200ms` (`ease-out`) for micro-interactions and `240ms–300ms` (`cubic-bezier(0.32, 0.72, 0, 1)`) for sheets, drawers, and expansions. Never exceed `350ms` for standard UI transitions, and never make task completion or data saving wait for animation completion.
+- **Two-State `Reduced Motion` Toggle (`On` / `Off`) in Settings:**
+  - Every app MUST include an explicit **Reduced Motion (`On` / `Off`)** toggle inside the Settings page, persisted in local storage/IndexedDB and reflected on the root `<html>` element (`data-reduced-motion="true" | "false"`).
+  - **Default Initialization:** Initialize from the user's explicit saved toggle choice if set; otherwise fall back to `window.matchMedia('(prefers-reduced-motion: reduce)').matches`.
+  - **Behavior When `Reduced Motion: On`:** Suppress all spatial translations, slides, scales, bounces, and parallax movement (`transform: none`), replacing essential state changes with near-instant (`<= 80ms`) subtle opacity cross-fades or `0.01ms` transitions so `transitionend` / unmount lifecycle hooks still fire reliably without breaking UI state.
 
 ---
 
@@ -141,13 +136,13 @@ Every numerical metric—including counters, currency totals, percentages, times
 - **Never Fabricate Verification:** Report a check as passed only if it actually ran and succeeded. Explicitly disclose unverified checks and limitations.
 - **SPA Routing & PWA Cache Hygiene:** Maintain a valid `vercel.json` SPA rewrite:
 
-  ```json
-  {
-    "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
-  }
-  ```
+```json
+{
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}
+```
 
-  Configure service worker updates (`registerType: "autoUpdate"` or explicit update registration) so new Vercel deployments invalidate stale assets.
+- Configure service worker updates (registerType: "autoUpdate" or explicit update registration) so new Vercel deployments invalidate stale assets.
 
 ---
 
@@ -166,7 +161,7 @@ Every function creation, bug fix, feature addition, or refactor must follow stri
 - **MINOR (`x.X.x`):** Backward-compatible new features, new UI components, and functional enhancements.
 - **MAJOR (`X.x.x`):** Breaking architectural changes or non-backward-compatible storage/API schema changes.
 - **Structured In-App Changelog Sync:** Maintain a single typed release-notes data source (`src/data/changelog.ts`) synchronized with `package.json`. Whenever bumping a MINOR or MAJOR version—or a notable PATCH fix—prepend a new release entry (`version`, `date`, `title`, `highlights[]`) so both the Settings Changelog view and the automatic “What’s New” modal stay up to date.
-- Every commit message must explicitly state the SemVer scope and version bump, for example:
+- **Commit Message Format:** Every commit message must explicitly state the SemVer scope and version bump, for example:
   - `fix(ui): resolve bottom sheet safe-area padding v1.0.2`
   - `feat(export): add CSV download utility v1.1.0`
 
