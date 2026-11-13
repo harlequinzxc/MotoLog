@@ -8,3 +8,9 @@ export function localDateTimeInputValue(date = new Date()) {
 }
 export function localDateTimeToIso(value: string) { const [datePart, timePart] = value.split("T"); const [year, month, day] = datePart.split("-").map(Number); const [hour, minute] = timePart.split(":").map(Number); return new Date(year, month - 1, day, hour, minute).toISOString(); }
 export function formatLocalDateTime(iso: string) { return new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(iso)); }
+
+export function formatLocalCalendarDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  if (!Number.isInteger(year) || !Number.isInteger(month) || !Number.isInteger(day)) return value;
+  return new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short", year: "numeric" }).format(new Date(year, month - 1, day));
+}

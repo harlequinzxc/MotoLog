@@ -1,7 +1,7 @@
 import { BarChart3, BookOpen, CirclePlus, Gauge, Wrench } from "lucide-react";
 import { cn } from "@/lib/cn";
 
-export type AppTab = "dashboard" | "logbook" | "service" | "reports" | "settings";
+export type AppTab = "dashboard" | "garage" | "logbook" | "service" | "reports" | "settings";
 interface BottomNavProps { activeTab: AppTab; onAddFuel: () => void; onTabChange: (tab: AppTab) => void }
 const items: Array<{ icon: typeof Gauge; label: string; tab: AppTab }> = [{ icon: Gauge, label: "Dashboard", tab: "dashboard" }, { icon: BookOpen, label: "Logbook", tab: "logbook" }, { icon: Wrench, label: "Service", tab: "service" }, { icon: BarChart3, label: "Reports", tab: "reports" }];
 

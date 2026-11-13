@@ -10,10 +10,23 @@ export function fromLitres(value: number, unit: VolumeUnit) { return unit === "g
 export function toLitres(value: number, unit: VolumeUnit) { return unit === "gallons" ? value * L_PER_US_GALLON : value; }
 export function formatDistance(kilometres: number, unit: DistanceUnit) { return `${fromKilometres(kilometres, unit).toFixed(0)} ${unit === "miles" ? "mi" : "km"}`; }
 export function formatVolume(litres: number, unit: VolumeUnit) { return `${fromLitres(litres, unit).toFixed(2)} ${unit === "gallons" ? "gal" : "L"}`; }
+
+export function displayEfficiencyValue(kmPerLitre: number | null, unit: ConsumptionUnit) {
+  if (kmPerLitre === null || kmPerLitre <= 0) return null;
+  if (unit === "litres-per-100km") return 100 / kmPerLitre;
+  if (unit === "mpg-us") return kmPerLitre * L_PER_US_GALLON / KM_PER_MILE;
+  if (unit === "mpg-uk") return kmPerLitre * L_PER_UK_GALLON / KM_PER_MILE;
+  return kmPerLitre;
+}
+
+export function formatDisplayedEfficiency(value: number | null, unit: ConsumptionUnit) {
+  if (value === null || !Number.isFinite(value)) return "—";
+  if (unit === "litres-per-100km") return `${value.toFixed(1)} L/100km`;
+  if (unit === "mpg-us") return `${value.toFixed(1)} MPG US`;
+  if (unit === "mpg-uk") return `${value.toFixed(1)} MPG UK`;
+  return `${value.toFixed(1)} km/L`;
+}
+
 export function formatEfficiency(kmPerLitre: number | null, unit: ConsumptionUnit) {
-  if (kmPerLitre === null || kmPerLitre <= 0) return "—";
-  if (unit === "litres-per-100km") return `${(100 / kmPerLitre).toFixed(1)} L/100km`;
-  if (unit === "mpg-us") return `${((kmPerLitre * L_PER_US_GALLON) / KM_PER_MILE).toFixed(1)} MPG US`;
-  if (unit === "mpg-uk") return `${((kmPerLitre * L_PER_UK_GALLON) / KM_PER_MILE).toFixed(1)} MPG UK`;
-  return `${kmPerLitre.toFixed(1)} km/L`;
+  return formatDisplayedEfficiency(displayEfficiencyValue(kmPerLitre, unit), unit);
 }
