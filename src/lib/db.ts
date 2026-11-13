@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable, type Table } from "dexie";
 
 import { STANDARD_SERVICE_ITEMS, serviceItemId } from "@/data/serviceItems";
+import { customServiceItem, legacyStandardServiceItem, migrateServiceCatalog, reconcileServiceCatalogForVehicle, standardServiceItemsForVehicle } from "@/lib/serviceCatalog";
 import { createId } from "@/lib/id";
 import { recalculateFuelLogs } from "@/utils/fuelMath";
 import type {
@@ -65,14 +66,7 @@ export class MotoLogDB extends Dexie {
       const expensesTable = transaction.table("expenseRecords") as Table<ExpenseRecord, string>;
       const timestamp = new Date().toISOString();
 
-      const standardItems = vehicles.flatMap((vehicle) => STANDARD_SERVICE_ITEMS.map((title) => ({
-        id: serviceItemId(vehicle.id, title),
-        vehicleId: vehicle.id,
-        title,
-        isCustom: false,
-        createdAt: timestamp,
-        updatedAt: timestamp
-      })));
+      const standardItems = vehicles.flatMap((vehicle) => STANDARD_SERVICE_ITEMS.map((title) => legacyStandardServiceItem(vehicle.id, title, timestamp)));
       await itemsTable.bulkPut(standardItems);
 
       for (const record of legacyServices) {
@@ -80,7 +74,7 @@ export class MotoLogDB extends Dexie {
         const hasStandard = STANDARD_SERVICE_ITEMS.includes(record.title as typeof STANDARD_SERVICE_ITEMS[number]);
         const itemId = hasStandard ? standardId : `migrated-item_${record.id}`;
         if (!hasStandard) {
-          await itemsTable.put({ id: itemId, vehicleId: record.vehicleId, title: record.title, isCustom: true, createdAt: record.occurredAt, updatedAt: timestamp });
+          await itemsTable.put(customServiceItem(record.vehicleId, itemId, record.title, record.occurredAt));
         }
         const visitId = `migrated-visit_${record.id}`;
         await visitsTable.put({ id: visitId, vehicleId: record.vehicleId, occurredAt: record.occurredAt, odometerKm: 0, totalCost: record.totalCost, currencyCode: record.currencyCode, notes: record.notes, createdAt: record.occurredAt, updatedAt: timestamp });
@@ -111,6 +105,16 @@ export class MotoLogDB extends Dexie {
         await settingsTable.update("app", { reducedMotion: null, updatedAt: new Date().toISOString() });
       }
     });
+    this.version(4).stores({
+      vehicles: "id,type,createdAt",
+      fuelLogs: "id,vehicleId,occurredAt,[vehicleId+occurredAt]",
+      serviceRecords: "id,vehicleId,occurredAt",
+      serviceItems: "id,vehicleId,[vehicleId+title]",
+      serviceVisits: "id,vehicleId,occurredAt,[vehicleId+occurredAt]",
+      serviceVisitItems: "id,visitId,serviceItemId",
+      expenseRecords: "id,vehicleId,occurredAt",
+      settings: "id"
+    }).upgrade(migrateServiceCatalog);
   }
 }
 
@@ -131,8 +135,8 @@ export async function ensureSettings() {
   return settings;
 }
 
-function standardItemsForVehicle(vehicleId: string, timestamp: string): ServiceItem[] {
-  return STANDARD_SERVICE_ITEMS.map((title) => ({ id: serviceItemId(vehicleId, title), vehicleId, title, isCustom: false, createdAt: timestamp, updatedAt: timestamp }));
+function standardItemsForVehicle(vehicle: Vehicle, timestamp: string): ServiceItem[] {
+  return standardServiceItemsForVehicle(vehicle, timestamp);
 }
 
 export async function createVehicle(input: VehicleInput) {
@@ -140,14 +144,26 @@ export async function createVehicle(input: VehicleInput) {
   const vehicle: Vehicle = { id: createId("vehicle"), name: input.name.trim(), type: input.type, fuelType: input.fuelType, tankCapacityLitres: input.tankCapacityLitres, currentOdometerKm: input.currentOdometerKm, distanceUnit: input.distanceUnit, volumeUnit: input.volumeUnit, consumptionUnit: input.consumptionUnit, currencyCode: input.currencyCode, createdAt: timestamp, updatedAt: timestamp };
   await db.transaction("rw", db.vehicles, db.serviceItems, db.settings, async () => {
     await db.vehicles.add(vehicle);
-    await db.serviceItems.bulkAdd(standardItemsForVehicle(vehicle.id, timestamp));
+    await db.serviceItems.bulkAdd(standardItemsForVehicle(vehicle, timestamp));
     const settings = await ensureSettings();
     if (!settings.activeVehicleId) await db.settings.update("app", { activeVehicleId: vehicle.id, updatedAt: timestamp });
   });
   return vehicle;
 }
 
-export async function updateVehicle(id: string, input: VehicleInput) { await db.vehicles.update(id, { ...input, name: input.name.trim(), updatedAt: new Date().toISOString() }); }
+export async function updateVehicle(id: string, input: VehicleInput) {
+  const existing = await db.vehicles.get(id);
+  if (!existing) throw new Error("Vehicle not found.");
+  const timestamp = new Date().toISOString();
+  const vehicle: Vehicle = { ...existing, ...input, id, name: input.name.trim(), updatedAt: timestamp };
+  await db.transaction("rw", db.vehicles, db.serviceItems, db.serviceVisitItems, async () => {
+    await db.vehicles.put(vehicle);
+    if (existing.type !== vehicle.type) {
+      const [items, links] = await Promise.all([db.serviceItems.where("vehicleId").equals(id).toArray(), db.serviceVisitItems.toArray()]);
+      await reconcileServiceCatalogForVehicle({ itemTable: db.serviceItems, items, linkedItemIds: new Set(links.map((link) => link.serviceItemId)), timestamp, vehicle });
+    }
+  });
+}
 export async function setActiveVehicle(id: string) { await db.settings.update("app", { activeVehicleId: id, updatedAt: new Date().toISOString() }); }
 
 export async function createFuelLog(vehicleId: string, input: FuelLogInput) {
@@ -184,7 +200,7 @@ async function saveRecalculatedLogs(vehicleId: string, logs: FuelLog[]) {
 
 export async function addCustomServiceItem(vehicleId: string, title: string) {
   const timestamp = new Date().toISOString();
-  const item: ServiceItem = { id: createId("service-item"), vehicleId, title: title.trim(), isCustom: true, createdAt: timestamp, updatedAt: timestamp };
+  const item = customServiceItem(vehicleId, createId("service-item"), title, timestamp);
   await db.serviceItems.add(item);
   return item;
 }

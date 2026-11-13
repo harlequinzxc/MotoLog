@@ -9,6 +9,16 @@ export interface ReleaseNote {
 
 export const CHANGELOG: ReleaseNote[] = [
   {
+    version: "v1.5.0",
+    date: "2026-08-26",
+    title: "Type-Specific Maintenance",
+    highlights: [
+      "Split maintenance checklists into general Car and Motorcycle service schedules.",
+      "Added grouped cadence, schedule, and guidance details to the Service tab and visit picker.",
+      "Migrated existing service history safely while keeping custom and historical items intact."
+    ]
+  },
+  {
     version: "v1.4.2",
     date: "2026-08-26",
     title: "iOS Safe-Area Repair",
