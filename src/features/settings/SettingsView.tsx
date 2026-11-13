@@ -4,7 +4,8 @@ import { useState } from "react";
 import { ChangelogSheet } from "@/components/changelog/ChangelogSheet";
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { ListGroup } from "@/components/ui/ListGroup";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { Toggle } from "@/components/ui/Toggle";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useApp } from "@/context/AppProvider";
@@ -68,12 +69,7 @@ export function SettingsView({ onOpenGarage }: SettingsViewProps) {
     setClearing(true);
     try {
       const snapshot = await clearAllData();
-      showToast({
-        actionLabel: "Undo",
-        message: "All local data cleared.",
-        onAction: () => restoreSnapshot(snapshot),
-        tone: "success"
-      });
+      showToast({ actionLabel: "Undo", message: "All local data cleared.", onAction: () => restoreSnapshot(snapshot), tone: "success" });
       setClearOpen(false);
     } catch (caughtError) {
       showToast({ message: caughtError instanceof Error ? caughtError.message : "Unable to clear local data.", tone: "error" });
@@ -83,79 +79,56 @@ export function SettingsView({ onOpenGarage }: SettingsViewProps) {
   };
 
   return (
-    <div className="grid gap-5">
-      <div>
-        <p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">SETTINGS</p>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">App preferences</h1>
-      </div>
-      <Card className="flex items-center gap-3">
-        {dark ? <Moon aria-hidden="true" className="size-5 text-red-500" strokeWidth={2} /> : <Sun aria-hidden="true" className="size-5 text-red-500" strokeWidth={2} />}
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-zinc-900 dark:text-zinc-50">{dark ? "Obsidian Black & Red" : "Light Mode"}</p>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Switch between the default dark theme and a clean light surface.</p>
-        </div>
-        <Toggle checked={dark} disabled={themeSaving} label="Toggle appearance theme" onChange={(checked) => void changeTheme(checked)} />
-      </Card>
-      <Card className="flex items-center gap-3">
-        <Accessibility aria-hidden="true" className="size-5 shrink-0 text-red-500" strokeWidth={2} />
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-zinc-900 dark:text-zinc-50">Reduced Motion: {reducedMotion ? "On" : "Off"}</p>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{settings?.reducedMotion === null ? "Following your system preference until you choose a setting." : "Saved for this device and used across all motion."}</p>
-        </div>
-        <Toggle checked={reducedMotion} disabled={motionSaving} label="Toggle reduced motion" onChange={(checked) => void changeReducedMotion(checked)} />
-      </Card>
-      <Card className="flex items-center gap-3">
-        <CarFront aria-hidden="true" className="size-5 shrink-0 text-red-500" strokeWidth={2} />
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-zinc-900 dark:text-zinc-50">Garage vehicle manager</p>
-          <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400"><span className="tabular-nums">{vehicles.length}</span> vehicle{vehicles.length === 1 ? "" : "s"} in your offline garage.</p>
-        </div>
-        <Button onClick={onOpenGarage} size="sm" variant="secondary">Manage</Button>
-      </Card>
-      <Card>
-        <p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">LOCAL DATA</p>
-        <div className="mt-4 grid gap-4">
-          <div className="flex items-center gap-3">
+    <div className="grid gap-7">
+      <SectionHeader eyebrow="CONTROL CENTER" title="Settings" />
+      <section>
+        <p className="mb-3 text-[11px] font-semibold tracking-[0.18em] text-zinc-500 dark:text-zinc-400">EXPERIENCE</p>
+        <ListGroup>
+          <div className="flex items-center gap-3 px-4 py-4">
+            {dark ? <Moon aria-hidden="true" className="size-5 text-red-500" strokeWidth={2} /> : <Sun aria-hidden="true" className="size-5 text-red-500" strokeWidth={2} />}
+            <div className="min-w-0 flex-1"><p className="font-semibold text-zinc-900 dark:text-zinc-50">{dark ? "Obsidian Black & Red" : "Light Mode"}</p><p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Choose the surface that is easiest on your eyes.</p></div>
+            <Toggle checked={dark} disabled={themeSaving} label="Toggle appearance theme" onChange={(checked) => void changeTheme(checked)} />
+          </div>
+          <div className="flex items-center gap-3 border-t border-zinc-200 px-4 py-4 dark:border-zinc-800">
+            <Accessibility aria-hidden="true" className="size-5 shrink-0 text-red-500" strokeWidth={2} />
+            <div className="min-w-0 flex-1"><p className="font-semibold text-zinc-900 dark:text-zinc-50">Reduced Motion: {reducedMotion ? "On" : "Off"}</p><p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{settings?.reducedMotion === null ? "Following your system preference." : "Saved for this device."}</p></div>
+            <Toggle checked={reducedMotion} disabled={motionSaving} label="Toggle reduced motion" onChange={(checked) => void changeReducedMotion(checked)} />
+          </div>
+        </ListGroup>
+      </section>
+      <section>
+        <p className="mb-3 text-[11px] font-semibold tracking-[0.18em] text-zinc-500 dark:text-zinc-400">GARAGE</p>
+        <ListGroup>
+          <div className="flex items-center gap-3 px-4 py-4">
+            <CarFront aria-hidden="true" className="size-5 shrink-0 text-red-500" strokeWidth={2} />
+            <div className="min-w-0 flex-1"><p className="font-semibold text-zinc-900 dark:text-zinc-50">Vehicle manager</p><p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400"><span className="tabular-nums">{vehicles.length}</span> vehicle{vehicles.length === 1 ? "" : "s"} in this garage.</p></div>
+            <Button onClick={onOpenGarage} size="sm" variant="secondary">Manage</Button>
+          </div>
+        </ListGroup>
+      </section>
+      <section>
+        <p className="mb-3 text-[11px] font-semibold tracking-[0.18em] text-zinc-500 dark:text-zinc-400">LOCAL DATA</p>
+        <ListGroup>
+          <div className="flex items-center gap-3 px-4 py-4">
             <RotateCcw aria-hidden="true" className="size-5 shrink-0 text-red-500" strokeWidth={2} />
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-zinc-900 dark:text-zinc-50">Load Sample Data</p>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Add Yamaha MT-15 and Honda Civic FD4 data to an empty garage.</p>
-            </div>
+            <div className="min-w-0 flex-1"><p className="font-semibold text-zinc-900 dark:text-zinc-50">Load sample garage</p><p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Yamaha MT-15 and Honda Civic FD4, ready to explore.</p></div>
             <Button loading={seeding} onClick={() => void seed()} size="sm" variant="secondary">Load</Button>
           </div>
-          <div className="flex items-center gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">
+          <div className="flex items-center gap-3 border-t border-zinc-200 px-4 py-4 dark:border-zinc-800">
             <Trash2 aria-hidden="true" className="size-5 shrink-0 text-rose-500" strokeWidth={2} />
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold text-zinc-900 dark:text-zinc-50">Clear All Data</p>
-              <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">Remove this device’s local garage, records, and preferences.</p>
-            </div>
+            <div className="min-w-0 flex-1"><p className="font-semibold text-zinc-900 dark:text-zinc-50">Clear all local data</p><p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Remove this device’s garage and records.</p></div>
             <Button onClick={() => setClearOpen(true)} size="sm" variant="danger">Clear</Button>
           </div>
-        </div>
-      </Card>
-      <Card className="flex items-center gap-3">
-        <Sparkles aria-hidden="true" className="size-5 text-red-500" strokeWidth={2} />
-        <div className="min-w-0 flex-1">
-          <p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">APP VERSION</p>
-          <p className="mt-1 tabular-nums font-semibold text-zinc-900 dark:text-zinc-50">{APP_VERSION}</p>
-        </div>
-      </Card>
-      <Card>
-        <div className="flex items-start gap-3">
-          <History aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-red-500" strokeWidth={2} />
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">CHANGELOG</p>
-            <p className="mt-1 font-semibold text-zinc-900 dark:text-zinc-50">{CURRENT_RELEASE.title}</p>
-            <ul className="mt-3 grid gap-2 text-sm text-zinc-600 dark:text-zinc-400">
-              {CURRENT_RELEASE.highlights.map((highlight) => <li className="flex gap-2" key={highlight}><Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-red-500" strokeWidth={2} /><span>{highlight}</span></li>)}
-            </ul>
-          </div>
-        </div>
-        <Button className="mt-4 w-full" onClick={() => setChangelogOpen(true)} size="md" variant="secondary">View all releases <ChevronRight className="size-4" strokeWidth={2} /></Button>
-      </Card>
+        </ListGroup>
+      </section>
+      <section className="border-t border-zinc-200 pt-6 dark:border-zinc-800">
+        <div className="flex items-start gap-3"><Sparkles aria-hidden="true" className="mt-0.5 size-5 text-red-500" strokeWidth={2} /><div><p className="text-[11px] font-semibold tracking-[0.18em] text-zinc-500 dark:text-zinc-400">CURRENT RELEASE</p><p className="mt-1 font-semibold text-zinc-900 dark:text-zinc-50">{CURRENT_RELEASE.title} <span className="tabular-nums text-zinc-500 dark:text-zinc-400">{APP_VERSION}</span></p></div></div>
+        <ul className="mt-4 grid gap-2 text-sm text-zinc-600 dark:text-zinc-300">{CURRENT_RELEASE.highlights.map((highlight) => <li className="flex gap-2" key={highlight}><Check aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-red-500" strokeWidth={2} /><span>{highlight}</span></li>)}</ul>
+        <Button className="mt-5" onClick={() => setChangelogOpen(true)} size="sm" variant="ghost">Release history <ChevronRight className="size-4" strokeWidth={2} /></Button>
+      </section>
       <ChangelogSheet onClose={() => setChangelogOpen(false)} open={changelogOpen} />
-      <BottomSheet footer={<Button className="w-full" loading={clearing} onClick={() => void clear()} size="lg" variant="danger">Clear All Data</Button>} onClose={() => setClearOpen(false)} open={clearOpen} title="Clear local data?">
-        <p className="pb-4 text-sm leading-6 text-zinc-600 dark:text-zinc-400">This removes all local MotoLog data. Undo is available briefly in the confirmation toast.</p>
+      <BottomSheet footer={<Button className="w-full" loading={clearing} onClick={() => void clear()} size="lg" variant="danger">Clear all data</Button>} onClose={() => setClearOpen(false)} open={clearOpen} title="Clear this device?">
+        <p className="pb-4 text-sm leading-6 text-zinc-600 dark:text-zinc-400">This removes every local MotoLog record. Undo remains available briefly after confirmation.</p>
       </BottomSheet>
     </div>
   );

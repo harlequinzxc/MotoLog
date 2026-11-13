@@ -2,8 +2,9 @@ import { Fuel, ReceiptText, Search, Trash2, Wrench } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ListGroup } from "@/components/ui/ListGroup";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useApp } from "@/context/AppProvider";
 import { ExpenseSheet } from "@/features/expenses/ExpenseSheet";
@@ -65,55 +66,42 @@ export function LogbookView() {
 
   const entries = useMemo<LogEntry[]>(() => {
     if (!activeVehicle) return [];
-    const fuelEntries: LogEntry[] = fuelLogs
-      .filter((log) => log.vehicleId === activeVehicle.id)
-      .map((log) => ({
-        id: log.id,
-        type: "fuel",
-        occurredAt: log.occurredAt,
-        title: `Fuel · ${log.stationName}`,
-        subtitle: `${log.currencyCode} ${log.totalCost?.toFixed(2) ?? "—"} · ${log.mode}`,
-        onEdit: () => {
-          setEditingFuel(log);
-          setFuelOpen(true);
-        },
-        onDelete: async () => {
-          const snapshot = await deleteFuelLog(log.id);
-          if (snapshot) showToast({ actionLabel: "Undo", message: "Fuel log deleted.", onAction: () => restoreSnapshot(snapshot), tone: "success" });
-        }
-      }));
+    const fuelEntries: LogEntry[] = fuelLogs.filter((log) => log.vehicleId === activeVehicle.id).map((log) => ({
+      id: log.id,
+      type: "fuel",
+      occurredAt: log.occurredAt,
+      title: `Fuel · ${log.stationName}`,
+      subtitle: `${log.currencyCode} ${log.totalCost?.toFixed(2) ?? "—"} · ${log.mode}`,
+      onEdit: () => { setEditingFuel(log); setFuelOpen(true); },
+      onDelete: async () => {
+        const snapshot = await deleteFuelLog(log.id);
+        if (snapshot) showToast({ actionLabel: "Undo", message: "Fuel log deleted.", onAction: () => restoreSnapshot(snapshot), tone: "success" });
+      }
+    }));
     const serviceEntries: LogEntry[] = visits.map((visit) => ({
       id: visit.id,
       type: "service",
       occurredAt: visit.occurredAt,
       title: `Service · ${itemIdsForVisit(visit.id).map((id) => items.find((item) => item.id === id)?.title ?? "Service").join(", ")}`,
       subtitle: `${visit.currencyCode} ${visit.totalCost.toFixed(2)}`,
-      onEdit: () => {
-        setEditingVisit(visit);
-        setServiceOpen(true);
-      },
+      onEdit: () => { setEditingVisit(visit); setServiceOpen(true); },
       onDelete: async () => {
         const snapshot = await deleteServiceVisit(visit.id);
         showToast({ actionLabel: "Undo", message: "Service visit deleted.", onAction: () => restoreSnapshot(snapshot), tone: "success" });
       }
     }));
-    const expenseEntries: LogEntry[] = expenseRecords
-      .filter((expense) => expense.vehicleId === activeVehicle.id)
-      .map((expense) => ({
-        id: expense.id,
-        type: "expense",
-        occurredAt: expense.occurredAt,
-        title: `Expense · ${expense.category}`,
-        subtitle: `${expense.currencyCode} ${expense.totalCost.toFixed(2)}`,
-        onEdit: () => {
-          setEditingExpense(expense);
-          setExpenseOpen(true);
-        },
-        onDelete: async () => {
-          const snapshot = await deleteExpense(expense.id);
-          showToast({ actionLabel: "Undo", message: "Expense deleted.", onAction: () => restoreSnapshot(snapshot), tone: "success" });
-        }
-      }));
+    const expenseEntries: LogEntry[] = expenseRecords.filter((expense) => expense.vehicleId === activeVehicle.id).map((expense) => ({
+      id: expense.id,
+      type: "expense",
+      occurredAt: expense.occurredAt,
+      title: `Expense · ${expense.category}`,
+      subtitle: `${expense.currencyCode} ${expense.totalCost.toFixed(2)}`,
+      onEdit: () => { setEditingExpense(expense); setExpenseOpen(true); },
+      onDelete: async () => {
+        const snapshot = await deleteExpense(expense.id);
+        showToast({ actionLabel: "Undo", message: "Expense deleted.", onAction: () => restoreSnapshot(snapshot), tone: "success" });
+      }
+    }));
     return [...fuelEntries, ...serviceEntries, ...expenseEntries].sort((first, second) => second.occurredAt.localeCompare(first.occurredAt));
   }, [activeVehicle, deleteExpense, deleteFuelLog, deleteServiceVisit, expenseRecords, fuelLogs, items, restoreSnapshot, serviceVisitItems, showToast, visits]);
 
@@ -134,10 +122,7 @@ export function LogbookView() {
     await updateServiceVisit(editingVisit.id, input);
     showToast({ message: "Service visit updated.", tone: "success" });
   };
-  const openNewFuel = () => {
-    setEditingFuel(undefined);
-    setFuelOpen(true);
-  };
+  const openNewFuel = () => { setEditingFuel(undefined); setFuelOpen(true); };
   const deleteEntry = async (entry: LogEntry) => {
     if (deletingId) return;
     setDeletingId(entry.id);
@@ -153,40 +138,34 @@ export function LogbookView() {
   if (!activeVehicle) return null;
 
   return (
-    <div className="grid gap-5">
-      <div>
-        <p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">UNIFIED ACTIVITY</p>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Logbook</h1>
-      </div>
+    <div className="grid gap-6">
+      <SectionHeader action={<Button onClick={openNewFuel} size="sm"><Fuel className="size-4" strokeWidth={2} />Log fill</Button>} eyebrow="HISTORY" title="Logbook" />
       <label className="relative">
         <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" strokeWidth={2} />
-        <input className="h-12 w-full rounded-xl border border-zinc-300 bg-white pl-10 pr-3 text-base text-zinc-900 placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50" onChange={(event) => setSearch(event.target.value)} placeholder="Search station or notes" value={search} />
+        <input className="h-12 w-full rounded-xl border border-zinc-200 bg-transparent pl-10 pr-3 text-base text-zinc-900 placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 dark:border-zinc-800 dark:text-zinc-50" onChange={(event) => setSearch(event.target.value)} placeholder="Find station, note, or category" value={search} />
       </label>
-      <div aria-label="Logbook filter" className="grid grid-cols-4 rounded-2xl bg-zinc-100 p-1 dark:bg-zinc-800" role="group">
+      <div aria-label="Logbook filter" className="grid grid-cols-4 border-b border-zinc-200 dark:border-zinc-800" role="group">
         {FILTERS.map((option) => {
           const active = filter === option.value;
-          return <button aria-pressed={active} className={`motion-press relative min-h-[44px] overflow-hidden rounded-xl text-xs font-semibold ${active ? "text-white" : "text-zinc-500 dark:text-zinc-400"}`} data-motion="logbook-filter" key={option.value} onClick={() => setFilter(option.value)} type="button"><span aria-hidden="true" className="motion-tab-indicator absolute inset-0 rounded-xl bg-red-600 dark:bg-red-500" data-motion="logbook-filter-indicator" data-state={active ? "open" : "closed"} /><span className="relative">{option.label}</span></button>;
+          return <button aria-pressed={active} className={`motion-press relative min-h-[44px] text-xs font-semibold ${active ? "text-red-600 dark:text-red-400" : "text-zinc-500 dark:text-zinc-400"}`} data-motion="logbook-filter" key={option.value} onClick={() => setFilter(option.value)} type="button"><span className="relative">{option.label}</span><span aria-hidden="true" className="motion-tab-indicator absolute inset-x-4 bottom-0 h-0.5 rounded-full bg-red-600 dark:bg-red-500" data-motion="logbook-filter-indicator" data-state={active ? "open" : "closed"} /></button>;
         })}
       </div>
-      <div className="grid gap-3">
-        {filtered.map((entry) => {
+      <ListGroup>
+        {filtered.length === 0 ? <EmptyState actionLabel="Log a Fill-Up" description="Fuel, service, and expense entries will appear here in time order." icon={Fuel} onAction={openNewFuel} title="No matching activity" /> : filtered.map((entry, index) => {
           const Icon = iconFor[entry.type];
           return (
-            <Card className="motion-list-item" data-motion="logbook-entry" key={entry.id}>
-              <div className="flex items-start gap-3">
-                <Icon aria-hidden="true" className="mt-0.5 size-5 text-red-500" strokeWidth={2} />
-                <button className="motion-press min-w-0 flex-1 text-left" onClick={entry.onEdit} type="button">
-                  <p className="truncate font-semibold text-zinc-900 dark:text-zinc-50">{entry.title}</p>
-                  <p className="mt-1 tabular-nums text-sm text-zinc-600 dark:text-zinc-400">{entry.subtitle}</p>
-                  <p className="mt-1 tabular-nums text-xs text-zinc-500 dark:text-zinc-400">{formatLocalDateTime(entry.occurredAt)}</p>
-                </button>
-                <Button aria-label={`Delete ${entry.title}`} loading={deletingId === entry.id} onClick={() => void deleteEntry(entry)} size="sm" variant="danger"><Trash2 className="size-4" strokeWidth={2} /></Button>
-              </div>
-            </Card>
+            <div className={`motion-list-item flex items-start gap-3 px-4 py-4 ${index > 0 ? "border-t border-zinc-200 dark:border-zinc-800" : ""}`} data-motion="logbook-entry" key={entry.id}>
+              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-zinc-100 text-red-600 dark:bg-zinc-800 dark:text-red-400"><Icon aria-hidden="true" className="size-4" strokeWidth={2} /></span>
+              <button className="motion-press min-w-0 flex-1 text-left" onClick={entry.onEdit} type="button">
+                <p className="truncate font-semibold text-zinc-900 dark:text-zinc-50">{entry.title}</p>
+                <p className="mt-1 tabular-nums text-sm text-zinc-600 dark:text-zinc-300">{entry.subtitle}</p>
+                <p className="mt-1 tabular-nums text-xs text-zinc-500 dark:text-zinc-400">{formatLocalDateTime(entry.occurredAt)}</p>
+              </button>
+              <Button aria-label={`Delete ${entry.title}`} loading={deletingId === entry.id} onClick={() => void deleteEntry(entry)} size="sm" variant="ghost"><Trash2 className="size-4 text-rose-500" strokeWidth={2} /></Button>
+            </div>
           );
         })}
-        {filtered.length === 0 ? <Card><EmptyState actionLabel="Log a Fill-Up" description="Fuel, service, and expense entries will appear here in time order." icon={Fuel} onAction={openNewFuel} title="No matching activity" /></Card> : null}
-      </div>
+      </ListGroup>
       <FuelLogSheet activeFuelOptions={activeVehicle.fuelType === "dual-fuel" ? ["petrol", "lpg"] : [activeVehicle.fuelType === "lpg" ? "lpg" : activeVehicle.fuelType === "diesel" ? "diesel" : "petrol"]} log={editingFuel} onClose={() => setFuelOpen(false)} onSubmit={saveFuel} open={fuelOpen} stationSuggestions={stations} />
       <ExpenseSheet currencyCode={activeVehicle.currencyCode} expense={editingExpense} onClose={() => setExpenseOpen(false)} onSubmit={saveExpense} open={expenseOpen} />
       <ServiceVisitSheet currencyCode={activeVehicle.currencyCode} items={items} onClose={() => setServiceOpen(false)} onSubmit={saveVisit} open={serviceOpen} visit={editingVisit} visitItemIds={editingVisit ? itemIdsForVisit(editingVisit.id) : []} />

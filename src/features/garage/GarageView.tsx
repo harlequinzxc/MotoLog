@@ -1,8 +1,10 @@
 import { Bike, CarFront, CirclePlus, Pencil } from "lucide-react";
 import { useState } from "react";
 
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
+import { ListGroup } from "@/components/ui/ListGroup";
+import { SectionHeader } from "@/components/ui/SectionHeader";
 import { useToast } from "@/components/ui/ToastProvider";
 import { useApp } from "@/context/AppProvider";
 import { VehicleFormSheet } from "@/features/garage/VehicleFormSheet";
@@ -40,33 +42,30 @@ export function GarageView() {
   };
 
   return (
-    <div className="grid gap-5">
-      <div className="flex items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold tracking-widest text-zinc-500 dark:text-zinc-400">MULTI-VEHICLE GARAGE</p>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-900 dark:text-zinc-50">Your vehicles</h1>
-        </div>
-        <Button onClick={() => { setEditing(undefined); setOpen(true); }} size="sm"><CirclePlus className="size-5" strokeWidth={2} />Add</Button>
-      </div>
-      <div className="grid gap-3">
-        {vehicles.map((vehicle) => {
+    <div className="grid gap-6">
+      <SectionHeader action={<Button onClick={() => { setEditing(undefined); setOpen(true); }} size="sm"><CirclePlus className="size-4" strokeWidth={2} />Add vehicle</Button>} eyebrow="GARAGE" title="Your vehicles" />
+      <ListGroup>
+        {vehicles.map((vehicle, index) => {
           const Icon = vehicle.type === "motorcycle" ? Bike : CarFront;
           const active = vehicle.id === activeVehicle?.id;
           return (
-            <Card className={`motion-list-item ${active ? "border-red-500/50" : ""}`} data-motion="garage-vehicle" key={vehicle.id}>
-              <div className="flex items-center gap-3">
-                <span className="grid size-11 place-items-center rounded-xl bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"><Icon aria-hidden="true" className="size-5" strokeWidth={2} /></span>
-                <div className="min-w-0 flex-1">
+            <div className={`motion-list-item flex items-center gap-3 px-4 py-4 ${index > 0 ? "border-t border-zinc-200 dark:border-zinc-800" : ""}`} data-motion="garage-vehicle" key={vehicle.id}>
+              <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${active ? "bg-red-500/10 text-red-600 dark:text-red-400" : "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"}`}><Icon aria-hidden="true" className="size-5" strokeWidth={2} /></span>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
                   <p className="truncate font-semibold text-zinc-900 dark:text-zinc-50">{vehicle.name}</p>
-                  <p className="mt-1 tabular-nums text-xs text-zinc-500 dark:text-zinc-400">{vehicle.type} · {vehicle.fuelType} · {formatVolume(vehicle.tankCapacityLitres, vehicle.volumeUnit)} · {formatDistance(vehicle.currentOdometerKm, vehicle.distanceUnit)}</p>
+                  {active ? <Badge tone="danger">Active</Badge> : null}
                 </div>
-                <Button disabled={active || activatingId !== null} loading={activatingId === vehicle.id} onClick={() => void activate(vehicle)} size="sm" variant={active ? "secondary" : "ghost"}>{active ? "Active" : "Use"}</Button>
+                <p className="mt-1 tabular-nums text-xs text-zinc-500 dark:text-zinc-400">{vehicle.type} · {vehicle.fuelType} · {formatVolume(vehicle.tankCapacityLitres, vehicle.volumeUnit)} · {formatDistance(vehicle.currentOdometerKm, vehicle.distanceUnit)}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-1">
+                <Button disabled={active || activatingId !== null} loading={activatingId === vehicle.id} onClick={() => void activate(vehicle)} size="sm" variant={active ? "ghost" : "secondary"}>{active ? "Current" : "Use"}</Button>
                 <Button aria-label={`Edit ${vehicle.name}`} onClick={() => { setEditing(vehicle); setOpen(true); }} size="sm" variant="ghost"><Pencil className="size-4" strokeWidth={2} /></Button>
               </div>
-            </Card>
+            </div>
           );
         })}
-      </div>
+      </ListGroup>
       <VehicleFormSheet onClose={() => setOpen(false)} onSubmit={save} open={open} vehicle={editing} />
     </div>
   );

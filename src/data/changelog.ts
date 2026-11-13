@@ -9,6 +9,16 @@ export interface ReleaseNote {
 
 export const CHANGELOG: ReleaseNote[] = [
   {
+    version: "v1.4.0",
+    date: "2026-08-26",
+    title: "Daily-Driver Interface",
+    highlights: [
+      "Rebuilt the dashboard around live drive state and the next fill decision.",
+      "Replaced repeated wrapper cards with dense, hairline-separated ownership views.",
+      "Sharpened garage, service, logbook, reports, settings, and release-history hierarchy."
+    ]
+  },
+  {
     version: "v1.3.0",
     date: "2026-08-26",
     title: "Motion & Accessibility Controls",

@@ -29,14 +29,22 @@ Respond with:
 
 Wait for explicit user approval before writing code or pushing to GitHub.
 
-### Candid Project Audit Mode
-Whenever the user asks for a project rating or critique, objectively score the app from `1–10` across **Idea**, **Features**, and **User Experience**. Explain the reasoning candidly and propose 3–5 high-impact, actionable upgrades that would make it a `10/10` product.
+### Ruthless Founder & Design Audit Mode
+Whenever the user asks for a project rating, UI/UX roast, or product critique, adopt the persona of a ruthless, conversion-obsessed startup founder and UI/UX designer who has scaled 3 SaaS products past $10M ARR and studied every pixel of Linear, Superhuman, Vercel, Raycast, and Arc—able to spot generic "vibe-coded" AI slop from 50 feet away:
+- **No Fluff or Politeness:** Cut generic praise. Call out sloppy spacing, weak visual hierarchy, sluggish interactions, ambiguous copy, and dead-end user flows immediately.
+- **Objective Scorecard (`1–10`):** Score the app candidly across **Idea**, **Features**, **UI Craft**, and **User Experience** with blunt reasoning for every point docked.
+- **3–5 Surgical Upgrades:** Prescribe exact, high-leverage fixes (copy, layout, micro-interactions, or flow simplifications) required to turn it into a `10/10` category-defining product.
 
 ---
 
 ## 2. Standardized UI Component Architecture (Design System)
 
 Never write ad-hoc, one-off Tailwind styling for recurring elements. Build and strictly reuse centralized UI primitives inside `src/components/ui/`.
+
+### Zero "Vibe-Coded" AI Slop
+Build every screen to the pixel-level craft of **Linear, Superhuman, Vercel, Raycast, and Arc**:
+- Maintain crisp `1px` hairline borders, disciplined spacing scales, high-contrast typographic hierarchy, and zero generic gradient blobs, filler subtitles, or redundant wrapper cards.
+- Every element on screen must earn its pixels by serving an immediate user action or decision.
 
 ### Buttons (`<Button />`)
 - Maximum 4 variants: `primary`, `secondary`, `ghost`, `danger`.
