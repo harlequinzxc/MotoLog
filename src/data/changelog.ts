@@ -9,6 +9,16 @@ export interface ReleaseNote {
 
 export const CHANGELOG: ReleaseNote[] = [
   {
+    version: "v1.6.0",
+    date: "2026-08-26",
+    title: "Native App Controls",
+    highlights: [
+      "Replaced system dropdowns with app-native sheet pickers and a native vehicle selector.",
+      "Hardened overlays through body portals and refined settings switches for reliable independent states.",
+      "Removed chart and table horizontal scrolling so content stays within the app viewport."
+    ]
+  },
+  {
     version: "v1.5.2",
     date: "2026-08-26",
     title: "Control & Overlay Reliability",

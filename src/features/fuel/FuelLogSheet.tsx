@@ -36,8 +36,6 @@ interface FormState {
   volume: string;
 }
 
-const stations = ["Shell", "Esso", "SPC", "Caltex", "Sinopec", "Petronas", "Other"] as const;
-
 function blank(activeFuel: ActiveFuel): FormState {
   return { date: localDateTimeInputValue(), odometerKm: "", pricePerUnit: "", volume: "", totalCost: "", currencyCode: "SGD", stationName: "Shell", mode: "full", activeFuel, notes: "", locked: "price", lastEdited: "volume" };
 }
@@ -106,16 +104,16 @@ export function FuelLogSheet({ activeFuelOptions, log, onClose, onSubmit, open, 
       <form className="grid gap-5 pb-2" id="fuel-form" onSubmit={submit}>
         <Input label="Date and time" onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))} type="datetime-local" value={form.date} />
         <Input endAdornment="km" inputMode="numeric" label="Odometer" onChange={(event) => setForm((current) => ({ ...current, odometerKm: event.target.value }))} startAdornment={<Gauge className="size-4" strokeWidth={2} />} type="number" value={form.odometerKm} />
-        <Select label="Fill-up mode" onChange={(event) => setForm((current) => ({ ...current, mode: event.target.value as FillUpMode }))} value={form.mode}>
+        <Select label="Fill-up mode" onValueChange={(value) => setForm((current) => ({ ...current, mode: value as FillUpMode }))} value={form.mode}>
           <option value="full">Full Tank</option><option value="partial">Partial Fill-Up</option><option value="missed">Missed a Fill-Up</option>
         </Select>
         <div className="motion-chart-enter" data-motion="fuel-mode" key={form.mode}>
           {form.mode === "missed" ? <p className="motion-list-item rounded-xl bg-zinc-100 px-3 py-2 text-sm text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400" data-motion="fuel-mode-help">This marker resets the efficiency baseline at its odometer reading. No cost or fuel volume is required.</p> : (
             <div className="grid gap-5">
-              <Select label="Lock calculation field" onChange={(event) => setForm((current) => ({ ...current, locked: event.target.value as LockedField }))} value={form.locked}>
+              <Select label="Lock calculation field" onValueChange={(value) => setForm((current) => ({ ...current, locked: value as LockedField }))} value={form.locked}>
                 <option value="price">Lock Price / Unit</option><option value="volume">Lock Volume</option><option value="total">Lock Total Cost</option>
               </Select>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <Input inputMode="decimal" label="Price / unit" onChange={(event) => editFinancial("price", event.target.value)} startAdornment={<Calculator className="size-4" strokeWidth={2} />} type="number" value={form.pricePerUnit} />
                 <Input inputMode="decimal" label="Volume" onChange={(event) => editFinancial("volume", event.target.value)} startAdornment={<Fuel className="size-4" strokeWidth={2} />} type="number" value={form.volume} />
                 <Input inputMode="decimal" label="Total cost" onChange={(event) => editFinancial("total", event.target.value)} type="number" value={form.totalCost} />
@@ -123,12 +121,11 @@ export function FuelLogSheet({ activeFuelOptions, log, onClose, onSubmit, open, 
             </div>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <Select label="Active fuel" onChange={(event) => setForm((current) => ({ ...current, activeFuel: event.target.value as ActiveFuel }))} value={form.activeFuel}>{activeFuelOptions.map((fuel) => <option key={fuel} value={fuel}>{fuel}</option>)}</Select>
-          <Select label="Currency" onChange={(event) => setForm((current) => ({ ...current, currencyCode: event.target.value }))} value={form.currencyCode}>{CURRENCIES.map((currency) => <option key={currency.code} value={currency.code}>{currency.code} — {currency.label}</option>)}</Select>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Select label="Active fuel" onValueChange={(value) => setForm((current) => ({ ...current, activeFuel: value as ActiveFuel }))} value={form.activeFuel}>{activeFuelOptions.map((fuel) => <option key={fuel} value={fuel}>{fuel}</option>)}</Select>
+          <Select label="Currency" onValueChange={(value) => setForm((current) => ({ ...current, currencyCode: value }))} value={form.currencyCode}>{CURRENCIES.map((currency) => <option key={currency.code} value={currency.code}>{currency.code} — {currency.label}</option>)}</Select>
         </div>
-        <Input label="Station" list="past-stations" onChange={(event) => setForm((current) => ({ ...current, stationName: event.target.value }))} placeholder="Shell" startAdornment={<MapPin className="size-4" strokeWidth={2} />} value={form.stationName} />
-        <datalist id="past-stations">{[...new Set([...stations, ...stationSuggestions])].map((station) => <option key={station} value={station} />)}</datalist>
+        <Input label="Station" onChange={(event) => setForm((current) => ({ ...current, stationName: event.target.value }))} placeholder={stationSuggestions[0] ?? "Shell"} startAdornment={<MapPin className="size-4" strokeWidth={2} />} value={form.stationName} />
         <Input label="Notes" onChange={(event) => setForm((current) => ({ ...current, notes: event.target.value }))} placeholder="Optional note" value={form.notes} />
         {error ? <p className="motion-list-item rounded-xl bg-rose-100 px-3 py-2 text-sm text-rose-700 dark:bg-rose-500/15 dark:text-rose-300" data-motion="form-error">{error}</p> : null}
       </form>

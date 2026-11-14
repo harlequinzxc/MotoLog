@@ -54,8 +54,8 @@ export function ConsumptionTrendChart({ onLogFuel, points, unit }: ConsumptionTr
 
   return (
     <div className="motion-chart-enter grid gap-3" data-motion="consumption-chart" key={displayPoints.map((point) => `${point.id}-${point.value}`).join("-")}>
-      <div className="overflow-x-auto">
-        <svg aria-label="Fuel efficiency trend" className="h-auto min-w-[300px] w-full" role="img" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
+      <div className="overflow-hidden">
+        <svg aria-label="Fuel efficiency trend" className="h-auto w-full" role="img" viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
           <line x1={HORIZONTAL_PADDING} x2={WIDTH - HORIZONTAL_PADDING} y1={VERTICAL_PADDING} y2={VERTICAL_PADDING} stroke="currentColor" strokeDasharray="4 4" className="text-zinc-200 dark:text-zinc-800" />
           <line x1={HORIZONTAL_PADDING} x2={WIDTH - HORIZONTAL_PADDING} y1={HEIGHT - VERTICAL_PADDING} y2={HEIGHT - VERTICAL_PADDING} stroke="currentColor" strokeDasharray="4 4" className="text-zinc-200 dark:text-zinc-800" />
           <path d={path} fill="none" stroke="#ef4444" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" />

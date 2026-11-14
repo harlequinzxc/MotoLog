@@ -1,5 +1,6 @@
 import { ReceiptText } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+
 import { BottomSheet } from "@/components/ui/BottomSheet";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -7,9 +8,76 @@ import { Select } from "@/components/ui/Select";
 import { localDateTimeInputValue, localDateTimeToIso } from "@/lib/date";
 import type { ExpenseCategory, ExpenseInput, ExpenseRecord } from "@/types";
 
-interface ExpenseSheetProps { currencyCode: string; expense?: ExpenseRecord; onClose:()=>void; onSubmit:(input:ExpenseInput)=>Promise<void>; open:boolean }
-const categories: Array<[ExpenseCategory,string]> = [["insurance","Insurance"],["road-tax","Road Tax"],["inspection","Inspection"],["parking","Parking"],["tolls-erp","Tolls / ERP"],["fines","Fines"],["wash","Car / Bike Wash"],["financing-coe","Financing / COE"],["leasing","Leasing"],["accessories","Accessories"],["repairs","Repairs"],["other","Other"]];
-interface State { date:string;category:ExpenseCategory;amount:string;odometer:string;notes:string }
-function blank():State{return{date:localDateTimeInputValue(),category:"other",amount:"",odometer:"",notes:""}}
-function fromExpense(expense?:ExpenseRecord):State{return expense?{date:localDateTimeInputValue(new Date(expense.occurredAt)),category:expense.category,amount:String(expense.totalCost),odometer:expense.odometerKm?.toString()??"",notes:expense.notes}:blank()}
-export function ExpenseSheet({currencyCode,expense,onClose,onSubmit,open}:ExpenseSheetProps){const [state,setState]=useState<State>(()=>fromExpense(expense)),[error,setError]=useState<string|null>(null),[saving,setSaving]=useState(false);useEffect(()=>{if(open){setState(fromExpense(expense));setError(null);setSaving(false)}},[expense,open]);const update=<Key extends keyof State>(key:Key,value:State[Key])=>setState(current=>({...current,[key]:value}));const submit=async(event:FormEvent<HTMLFormElement>)=>{event.preventDefault();const amount=Number(state.amount),odometer=state.odometer.trim()?Number(state.odometer):null;if(!Number.isFinite(amount)||amount<0)return setError("Enter a valid amount.");if(odometer!==null&&(!Number.isFinite(odometer)||odometer<0))return setError("Enter a valid optional odometer.");setSaving(true);setError(null);try{await onSubmit({occurredAt:localDateTimeToIso(state.date),category:state.category,totalCost:amount,currencyCode,odometerKm:odometer,notes:state.notes});onClose()}catch(caughtError){setError(caughtError instanceof Error?caughtError.message:"Unable to save expense.")}finally{setSaving(false)}};return <BottomSheet footer={<Button className="w-full" form="expense-form" loading={saving} size="lg" type="submit">{expense?"Save Expense":"Log Expense"}</Button>} onClose={onClose} open={open} title={expense?"Edit Expense":"Log Expense"}><form className="grid gap-5 pb-2" id="expense-form" onSubmit={submit}><Input label="Date and time" onChange={event=>update("date",event.target.value)} type="datetime-local" value={state.date}/><Select label="Category" onChange={event=>update("category",event.target.value as ExpenseCategory)} value={state.category}>{categories.map(([value,label])=><option key={value} value={value}>{label}</option>)}</Select><div className="grid grid-cols-2 gap-3"><Input endAdornment={currencyCode} inputMode="decimal" label="Amount" onChange={event=>update("amount",event.target.value)} startAdornment={<ReceiptText className="size-4" strokeWidth={2}/>} type="number" value={state.amount}/><Input endAdornment="km" inputMode="numeric" label="Odometer (optional)" onChange={event=>update("odometer",event.target.value)} type="number" value={state.odometer}/></div><Input label="Notes" onChange={event=>update("notes",event.target.value)} placeholder="Optional note" value={state.notes}/>{error?<p className="motion-list-item rounded-xl bg-rose-100 px-3 py-2 text-sm text-rose-700 dark:bg-rose-500/15 dark:text-rose-300" data-motion="form-error">{error}</p>:null}</form></BottomSheet>}
+interface ExpenseSheetProps {
+  currencyCode: string;
+  expense?: ExpenseRecord;
+  onClose: () => void;
+  onSubmit: (input: ExpenseInput) => Promise<void>;
+  open: boolean;
+}
+
+const categories: Array<[ExpenseCategory, string]> = [["insurance", "Insurance"], ["road-tax", "Road Tax"], ["inspection", "Inspection"], ["parking", "Parking"], ["tolls-erp", "Tolls / ERP"], ["fines", "Fines"], ["wash", "Car / Bike Wash"], ["financing-coe", "Financing / COE"], ["leasing", "Leasing"], ["accessories", "Accessories"], ["repairs", "Repairs"], ["other", "Other"]];
+
+interface State {
+  amount: string;
+  category: ExpenseCategory;
+  date: string;
+  notes: string;
+  odometer: string;
+}
+
+function blank(): State {
+  return { date: localDateTimeInputValue(), category: "other", amount: "", odometer: "", notes: "" };
+}
+
+function fromExpense(expense?: ExpenseRecord): State {
+  return expense ? { date: localDateTimeInputValue(new Date(expense.occurredAt)), category: expense.category, amount: String(expense.totalCost), odometer: expense.odometerKm?.toString() ?? "", notes: expense.notes } : blank();
+}
+
+export function ExpenseSheet({ currencyCode, expense, onClose, onSubmit, open }: ExpenseSheetProps) {
+  const [state, setState] = useState<State>(() => fromExpense(expense));
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setState(fromExpense(expense));
+      setError(null);
+      setSaving(false);
+    }
+  }, [expense, open]);
+
+  const update = <Key extends keyof State>(key: Key, value: State[Key]) => setState((current) => ({ ...current, [key]: value }));
+  const submit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const amount = Number(state.amount);
+    const odometer = state.odometer.trim() ? Number(state.odometer) : null;
+    if (!Number.isFinite(amount) || amount < 0) return setError("Enter a valid amount.");
+    if (odometer !== null && (!Number.isFinite(odometer) || odometer < 0)) return setError("Enter a valid optional odometer.");
+    setSaving(true);
+    setError(null);
+    try {
+      await onSubmit({ occurredAt: localDateTimeToIso(state.date), category: state.category, totalCost: amount, currencyCode, odometerKm: odometer, notes: state.notes });
+      onClose();
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Unable to save expense.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <BottomSheet footer={<Button className="w-full" form="expense-form" loading={saving} size="lg" type="submit">{expense ? "Save Expense" : "Log Expense"}</Button>} onClose={onClose} open={open} title={expense ? "Edit Expense" : "Log Expense"}>
+      <form className="grid gap-5 pb-2" id="expense-form" onSubmit={submit}>
+        <Input label="Date and time" onChange={(event) => update("date", event.target.value)} type="datetime-local" value={state.date} />
+        <Select label="Category" onValueChange={(value) => update("category", value as ExpenseCategory)} value={state.category}>{categories.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</Select>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Input endAdornment={currencyCode} inputMode="decimal" label="Amount" onChange={(event) => update("amount", event.target.value)} startAdornment={<ReceiptText className="size-4" strokeWidth={2} />} type="number" value={state.amount} />
+          <Input endAdornment="km" inputMode="numeric" label="Odometer (optional)" onChange={(event) => update("odometer", event.target.value)} type="number" value={state.odometer} />
+        </div>
+        <Input label="Notes" onChange={(event) => update("notes", event.target.value)} placeholder="Optional note" value={state.notes} />
+        {error ? <p className="motion-list-item rounded-xl bg-rose-100 px-3 py-2 text-sm text-rose-700 dark:bg-rose-500/15 dark:text-rose-300" data-motion="form-error">{error}</p> : null}
+      </form>
+    </BottomSheet>
+  );
+}

@@ -28,14 +28,15 @@ export function MonthlySpendingChart({ currencyCode, months, onLogFuel }: Monthl
       <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-zinc-600 dark:text-zinc-300">
         {STACKS.map((stack) => <span className="inline-flex items-center gap-1.5" key={stack.key}><span aria-hidden="true" className={`size-2.5 rounded-full ${stack.className}`} />{stack.label}</span>)}
       </div>
-      <div className="overflow-x-auto pb-1">
-        <div className="flex h-56 min-w-max items-end gap-3 border-b border-zinc-200 px-1 dark:border-zinc-800">
+      <div className="overflow-hidden">
+        <div className="grid h-56 items-end gap-1 border-b border-zinc-200 px-1 dark:border-zinc-800" style={{ gridTemplateColumns: `repeat(${months.length}, minmax(0, 1fr))` }}>
           {months.map((month) => {
             const height = Math.max(month.total / maximum * 100, 4);
+            const shortLabel = month.label.split(" ")[0];
             return (
-              <div className="motion-list-item flex h-full w-14 flex-col justify-end" data-motion="monthly-bar" key={month.key}>
+              <div className="motion-list-item flex min-w-0 flex-col justify-end" data-motion="monthly-bar" key={month.key}>
                 <div className="flex flex-1 flex-col justify-end">
-                  <div aria-label={`${month.label}: ${formatCurrency(month.total, currencyCode)}`} className="flex w-full flex-col-reverse overflow-hidden rounded-t-xl shadow-sm" style={{ height: `${height}%` }} title={`${month.label}: ${formatCurrency(month.total, currencyCode)}`}>
+                  <div aria-label={`${month.label}: ${formatCurrency(month.total, currencyCode)}`} className="flex w-full flex-col-reverse overflow-hidden rounded-t-md shadow-sm" style={{ height: `${height}%` }} title={`${month.label}: ${formatCurrency(month.total, currencyCode)}`}>
                     {STACKS.map((stack) => {
                       const amount = month[stack.key];
                       if (amount <= 0) return null;
@@ -43,7 +44,7 @@ export function MonthlySpendingChart({ currencyCode, months, onLogFuel }: Monthl
                     })}
                   </div>
                 </div>
-                <p className="mt-2 text-center text-[10px] font-semibold text-zinc-500 dark:text-zinc-400"><span className="block tabular-nums">{month.label}</span></p>
+                <p className="mt-2 min-w-0 text-center text-[10px] font-semibold text-zinc-500 dark:text-zinc-400"><span className="block truncate tabular-nums" title={month.label}>{shortLabel}</span></p>
               </div>
             );
           })}
