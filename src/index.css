@@ -51,6 +51,7 @@ button, input, select { font: inherit; }
   transition: transform var(--motion-sheet) var(--motion-ease), opacity var(--motion-sheet) var(--motion-ease);
 }
 .motion-sheet-panel[data-state="open"] { opacity: 1; transform: translateY(0) scale(1); }
+.sheet-scroll { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .motion-toast {
   opacity: 0;
   transform: translateY(0.5rem);

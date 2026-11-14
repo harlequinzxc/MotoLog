@@ -3,6 +3,7 @@ import { useEffect, type ReactNode } from "react";
 
 import { MOTION_DURATION } from "@/lib/motion";
 import { cn } from "@/lib/cn";
+import { useBodyScrollLock } from "@/components/ui/useBodyScrollLock";
 import { usePresence } from "@/components/ui/usePresence";
 
 interface BottomSheetProps {
@@ -15,6 +16,7 @@ interface BottomSheetProps {
 
 export function BottomSheet({ children, footer, onClose, open, title }: BottomSheetProps) {
   const { isMounted, isVisible } = usePresence(open, MOTION_DURATION.sheet);
+  useBodyScrollLock(isMounted);
 
   useEffect(() => {
     if (!open) return;
@@ -42,7 +44,7 @@ export function BottomSheet({ children, footer, onClose, open, title }: BottomSh
             </button>
           </div>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-5 pb-4">{children}</div>
+        <div className="sheet-scroll min-h-0 flex-1 overflow-y-auto px-5 pb-4">{children}</div>
         {footer ? <div className="shrink-0 border-t border-zinc-200 bg-zinc-50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] dark:border-zinc-800 dark:bg-zinc-900">{footer}</div> : null}
       </section>
     </div>
