@@ -44,13 +44,13 @@ button, input, select { font: inherit; }
   opacity: 0;
   transition: opacity var(--motion-sheet) var(--motion-ease);
 }
-.motion-sheet-backdrop[data-state="open"] { opacity: 1; }
+.motion-sheet-backdrop[data-state="open"] { animation: motion-fade-in var(--motion-sheet) var(--motion-ease) both; opacity: 1; }
 .motion-sheet-panel {
   opacity: 0;
   transform: translateY(1.25rem) scale(0.985);
   transition: transform var(--motion-sheet) var(--motion-ease), opacity var(--motion-sheet) var(--motion-ease);
 }
-.motion-sheet-panel[data-state="open"] { opacity: 1; transform: translateY(0) scale(1); }
+.motion-sheet-panel[data-state="open"] { animation: motion-sheet-in var(--motion-sheet) var(--motion-ease) both; opacity: 1; transform: translateY(0) scale(1); }
 .sheet-scroll { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .motion-toast {
   opacity: 0;
@@ -60,6 +60,16 @@ button, input, select { font: inherit; }
 .motion-toast[data-state="open"] { opacity: 1; transform: translateY(0); }
 .motion-progress { transition: clip-path var(--motion-standard) ease-out; }
 .motion-list-item { animation: motion-list-in var(--motion-fast) ease-out both; }
+
+@keyframes motion-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes motion-sheet-in {
+  from { opacity: 0; transform: translateY(1.25rem) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 .motion-chart-enter { animation: motion-chart-in var(--motion-standard) ease-out both; }
 
 @keyframes motion-list-in {

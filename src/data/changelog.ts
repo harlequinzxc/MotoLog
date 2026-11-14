@@ -9,6 +9,15 @@ export interface ReleaseNote {
 
 export const CHANGELOG: ReleaseNote[] = [
   {
+    version: "v1.5.2",
+    date: "2026-08-26",
+    title: "Control & Overlay Reliability",
+    highlights: [
+      "Rebuilt settings switches with correct independent On/Off states.",
+      "Made bottom-sheet mounting deterministic so overlays open reliably on mobile browsers."
+    ]
+  },
+  {
     version: "v1.5.1",
     date: "2026-08-26",
     title: "Sheet Scroll Lock",
