@@ -19,8 +19,7 @@ export function Toggle({ checked, disabled = false, label, onChange }: TogglePro
       role="switch"
       type="button"
     >
-      <span aria-hidden="true" className={cn("relative h-8 w-14 rounded-full border p-[3px]", checked ? "border-red-500 bg-red-600 dark:bg-red-500" : "border-zinc-300 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800")}>
-        <span className={cn("absolute top-1/2 -translate-y-1/2 text-[9px] font-bold tracking-[0.12em]", checked ? "left-2 text-white" : "right-2 text-zinc-500 dark:text-zinc-400")}>{checked ? "ON" : "OFF"}</span>
+      <span aria-hidden="true" className={cn("relative h-8 w-14 rounded-full border p-[3px] shadow-inner", checked ? "border-red-500 bg-red-600 dark:bg-red-500" : "border-zinc-300 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800")}>
         <span className={cn("motion-toggle-thumb absolute left-[3px] top-[3px] size-[26px] rounded-full border border-black/5 bg-white shadow-sm dark:border-white/10", checked ? "translate-x-6" : "translate-x-0")} />
       </span>
     </button>

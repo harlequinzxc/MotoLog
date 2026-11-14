@@ -38,7 +38,7 @@ export function NextFillPredictor({ distanceUnit, onLogFuel, value, volumeUnit }
         </div>
         <Button onClick={onLogFuel} size="sm">Log fill</Button>
       </div>
-      <div className="motion-chart-enter mt-6 grid grid-cols-3 gap-3" data-motion="predictor" key={`${tankPercent}-${value.remainingRangeKm}`}>
+      <div className="motion-chart-enter mt-6 grid grid-cols-1 gap-4 min-[420px]:grid-cols-3" data-motion="predictor" key={`${tankPercent}-${value.remainingRangeKm}`}>
         <div>
           <Gauge aria-hidden="true" className="size-5 text-red-400" strokeWidth={2} />
           <p className="mt-2 tabular-nums font-semibold">{formatDistance(value.remainingRangeKm, distanceUnit)}</p>

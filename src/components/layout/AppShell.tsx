@@ -16,7 +16,7 @@ export function AppShell({ activeTab, children, onAddFuel, onSettings, onTabChan
     <div className="min-h-[100dvh] overflow-x-hidden bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-50">
       <div className="app-nav-clearance mx-auto min-h-[100dvh] max-w-[480px]">
         <AppHeader onSettings={onSettings} />
-        <main className="px-4 pb-6 sm:px-6">{children}</main>
+        <main className="min-w-0 px-4 pb-6 sm:px-6">{children}</main>
       </div>
       <BottomNav activeTab={activeTab} onAddFuel={onAddFuel} onTabChange={onTabChange} />
     </div>

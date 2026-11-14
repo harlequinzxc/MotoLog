@@ -49,8 +49,9 @@ export function SpendingBreakdown({ categories, currencyCode, onLogFuel, totalSp
           </div>
         </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-left text-sm">
+      <div className="overflow-hidden">
+        <table className="w-full table-fixed text-left text-sm">
+          <colgroup><col className="w-[46%]" /><col className="w-[34%]" /><col className="w-[20%]" /></colgroup>
           <thead className="border-b border-zinc-200 text-xs font-semibold tracking-wide text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
             <tr>
               <th className="px-0 py-2 font-semibold" scope="col">Category</th>
@@ -62,10 +63,10 @@ export function SpendingBreakdown({ categories, currencyCode, onLogFuel, totalSp
             {categories.map((category, index) => (
               <tr className="motion-list-item" data-motion="spending-row" key={category.key}>
                 <th className="py-3 pr-2 font-medium text-zinc-700 dark:text-zinc-200" scope="row">
-                  <span className="inline-flex items-center gap-2"><span aria-hidden="true" className="size-2.5 rounded-full" style={{ backgroundColor: colorFor(index) }} />{category.label}</span>
+                  <span className="flex min-w-0 items-start gap-2"><span aria-hidden="true" className="mt-1 size-2.5 shrink-0 rounded-full" style={{ backgroundColor: colorFor(index) }} /><span className="break-words">{category.label}</span></span>
                 </th>
-                <td className="whitespace-nowrap px-2 py-3 text-right tabular-nums text-zinc-900 dark:text-zinc-50">{formatCurrency(category.amount, currencyCode)}</td>
-                <td className="whitespace-nowrap py-3 text-right tabular-nums text-zinc-600 dark:text-zinc-300">{category.share.toFixed(1)}%</td>
+                <td className="break-words px-2 py-3 text-right tabular-nums text-xs text-zinc-900 dark:text-zinc-50">{formatCurrency(category.amount, currencyCode)}</td>
+                <td className="break-words py-3 text-right tabular-nums text-xs text-zinc-600 dark:text-zinc-300">{category.share.toFixed(1)}%</td>
               </tr>
             ))}
           </tbody>
